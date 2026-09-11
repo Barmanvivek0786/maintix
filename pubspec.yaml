@@ -1,7 +1,7 @@
 name: maintix
 description: A new Flutter project.
 publish_to: none
-version: 1.0.0+11
+version: 1.0.0+1
 
 environment:
   sdk: ^3.9.0
@@ -45,15 +45,15 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "ic_launcher"
   ios: true
-  image_path: "assets/images/maintix-1787987681965.png"
+  image_path: "assets/images/maintix_app_icon.png"
   web:
     generate: true
-    image_path: "assets/images/maintix-1787987681965.png"
-    background_color: "#0A2540"
-    theme_color: "#0A2540"
+    image_path: "assets/images/maintix_app_icon.png"
+    background_color: "#1A1A2E"
+    theme_color: "#1A1A2E"
   min_sdk_android: 21
-  adaptive_icon_background: "#0A2540"
-  adaptive_icon_foreground: "assets/images/maintix-1787987681965.png"
+  adaptive_icon_background: "#1A1A2E"
+  adaptive_icon_foreground: "assets/images/maintix_app_icon.png"
 
 flutter:
   uses-material-design: true # CRITICAL: Required for Material icon font - DO NOT REMOVE

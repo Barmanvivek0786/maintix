@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -9,7 +10,6 @@ import './providers/app_state.dart';
 import './routes/app_routes.dart';
 import './services/notification_service.dart';
 import './services/supabase_service.dart';
-import './theme/app_theme.dart';
 import './widgets/custom_error_widget.dart';
 import 'core/app_export.dart';
 
@@ -40,10 +40,12 @@ void main() {
 
       // Initialize Supabase — wrapped in try/catch so a missing dart-define
       // in release builds does not crash the app before the UI renders.
+      String? startupError;
       try {
         await SupabaseService.initialize();
-      } catch (e) {
-        debugPrint('Supabase init error (non-fatal): $e');
+      } catch (e, stack) {
+        startupError = 'Supabase init failed:\n$e\n\nStack:\n$stack';
+        debugPrint('Supabase init error: $e\n$stack');
       }
 
       // Initialize notification service
@@ -60,12 +62,113 @@ void main() {
       ]);
 
       GoRouter.optionURLReflectsImperativeAPIs = true;
+
+      // If Supabase failed to initialize, show the actual error on screen
+      if (startupError != null) {
+        runApp(StartupErrorApp(errorMessage: startupError));
+        return;
+      }
+
       runApp(const MyApp());
     },
     (Object error, StackTrace stack) {
       debugPrint('Uncaught error: $error\n$stack');
+      // Show the actual error on screen for uncaught zone errors
+      runApp(
+        StartupErrorApp(
+          errorMessage: 'Uncaught startup error:\n$error\n\nStack:\n$stack',
+        ),
+      );
     },
   );
+}
+
+/// Displayed when a fatal startup error occurs — shows the ACTUAL error
+/// message so it can be diagnosed immediately without needing logcat.
+class StartupErrorApp extends StatelessWidget {
+  final String errorMessage;
+  const StartupErrorApp({required this.errorMessage, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        backgroundColor: const Color(0xFF1A1A2E),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 32),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      color: Color(0xFFFF6B6B),
+                      size: 32,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Startup Error',
+                        style: GoogleFonts.inter(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'The app failed to start. Copy the error below and share it for debugging:',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: const Color(0xFFAAAAAA),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0D0D1A),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color(0xFFFF6B6B).withAlpha(102),
+                    ),
+                  ),
+                  child: SelectableText(
+                    errorMessage,
+                    style: GoogleFonts.sourceCodePro(
+                      fontSize: 11,
+                      color: const Color(0xFFFF6B6B),
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Common fixes:\n'
+                  '• Ensure --dart-define=SUPABASE_URL=... is set in your build command\n'
+                  '• Ensure --dart-define=SUPABASE_ANON_KEY=... is set\n'
+                  '• Check GitHub Actions secrets are correctly mapped',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: const Color(0xFF888888),
+                    height: 1.6,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class MyApp extends StatefulWidget {

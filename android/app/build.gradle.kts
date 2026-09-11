@@ -1,8 +1,18 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+// Load signing config from key.properties (created by CI/CD)
+val keyPropertiesFile = rootProject.file("key.properties")
+val keyProperties = Properties()
+if (keyPropertiesFile.exists()) {
+    keyProperties.load(FileInputStream(keyPropertiesFile))
 }
 
 android {
@@ -20,15 +30,6 @@ android {
         jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
-    signingConfigs {
-        create("release") {
-            storeFile = file("keystore.jks")
-            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "Vivek@07860786"
-            keyAlias = System.getenv("KEY_ALIAS") ?: "Maintix"
-            keyPassword = System.getenv("KEY_PASSWORD") ?: "Vivek@07860786"
-        }
-    }
-
     defaultConfig {
         applicationId = "com.maintix.app"
         minSdk = flutter.minSdkVersion
@@ -38,9 +39,23 @@ android {
         multiDexEnabled = true
     }
 
+    signingConfigs {
+        if (keyPropertiesFile.exists()) {
+            create("release") {
+                keyAlias = keyProperties["keyAlias"] as String
+                keyPassword = keyProperties["keyPassword"] as String
+                storeFile = file(keyProperties["storeFile"] as String)
+                storePassword = keyProperties["storePassword"] as String
+            }
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")
+            // Use release signing if key.properties exists (CI/CD), otherwise unsigned
+            if (keyPropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = false
             isShrinkResources = false
             proguardFiles(
@@ -52,10 +67,10 @@ android {
             isMinifyEnabled = false
         }
     }
+}
 
-    flutter {
-        source = "../.."
-    }
+flutter {
+    source = "../.."
 }
 
 dependencies {

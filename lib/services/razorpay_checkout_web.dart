@@ -1,7 +1,6 @@
 // Web implementation using Razorpay JS SDK via dart:js
 // ignore_for_file: avoid_web_libraries_in_flutter
 import 'dart:js' as js;
-import 'dart:js_util' show allowInterop;
 import 'package:flutter/material.dart';
 
 Future<void> launchRazorpayCheckout({
@@ -24,7 +23,7 @@ Future<void> launchRazorpayCheckout({
     }
 
     // Register global callbacks that JS can call back into Dart
-    js.context['_rzpOnSuccess'] = allowInterop((
+    js.context['_rzpOnSuccess'] = js.allowInterop((
       String paymentId,
       String rzpOrderId,
       String signature,
@@ -32,7 +31,7 @@ Future<void> launchRazorpayCheckout({
       onSuccess(paymentId, rzpOrderId, signature);
     });
 
-    js.context['_rzpOnFailure'] = allowInterop((String errorMsg) {
+    js.context['_rzpOnFailure'] = js.allowInterop((String errorMsg) {
       onFailure(errorMsg);
     });
 
