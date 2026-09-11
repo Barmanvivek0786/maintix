@@ -20,6 +20,15 @@ android {
         jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("keystore.jks")
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "Vivek@07860786"
+            keyAlias = System.getenv("KEY_ALIAS") ?: "Maintix"
+            keyPassword = System.getenv("KEY_PASSWORD") ?: "Vivek@07860786"
+        }
+    }
+
     defaultConfig {
         applicationId = "com.maintix.app"
         minSdk = flutter.minSdkVersion
@@ -31,8 +40,7 @@ android {
 
     buildTypes {
         release {
-            // Signing is handled by the CI/CD pipeline (GitHub Actions keystore config).
-            // Do NOT use debug signing config for release builds.
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -44,10 +52,10 @@ android {
             isMinifyEnabled = false
         }
     }
-}
 
-flutter {
-    source = "../.."
+    flutter {
+        source = "../.."
+    }
 }
 
 dependencies {
