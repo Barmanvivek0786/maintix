@@ -43,18 +43,49 @@ jobs:
         run: |
           cat > android/key.properties <<EOF
           storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          keyPassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
           storeFile=keystore.jks
           EOF
 
+      - name: Create Flutter defines
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          RAZORPAY_KEY_ID: ${{ secrets.RAZORPAY_KEY_ID }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+
+          required = [
+              "SUPABASE_URL",
+              "SUPABASE_ANON_KEY",
+              "RAZORPAY_KEY_ID",
+          ]
+
+          missing = [name for name in required if not os.environ.get(name)]
+          if missing:
+              raise SystemExit("Missing GitHub secrets: " + ", ".join(missing))
+
+          with open("dart_defines.json", "w", encoding="utf-8") as file:
+              json.dump(
+                  {name: os.environ[name] for name in required},
+                  file
+              )
+          PY
+
       - name: Build release AAB
         run: |
-          flutter build appbundle --release \
-            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
-            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
-            --dart-define=RAZORPAY_KEY_ID=${{ secrets.RAZORPAY_KEY_ID }} \
-            --dart-define=RAZORPAY_KEY_SECRET=${{ secrets.RAZORPAY_KEY_SECRET }}
+          flutter clean
+          flutter pub get
+          flutter build appbundle \
+            --release \
+            --dart-define-from-file=dart_defines.json
+
+      - name: Remove generated defines
+        if: always()
+        run: rm -f dart_defines.json
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
