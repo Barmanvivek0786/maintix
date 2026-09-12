@@ -194,7 +194,6 @@ class ServiceRecord {
     );
   }
 }
-
 class SupabaseService {
   static SupabaseService? _instance;
   static SupabaseService get instance => _instance ??= SupabaseService._();
