@@ -90,12 +90,11 @@ class _SignUpLoginScreenState extends State<SignUpLoginScreen>
         );
       }
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _errorMessage =
-              'Failed to send OTP. Please check your email and try again.';
-        });
-      }
+  if (mounted) {
+    setState(() {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+    });
+  }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
