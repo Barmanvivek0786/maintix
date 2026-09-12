@@ -203,11 +203,11 @@ class SupabaseService {
 
   static const String supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
-    defaultValue: '',
+    defaultValue: 'https://hudlucmsjyjilkjpviva.supabase.co',
   );
   static const String supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
-    defaultValue: '',
+    defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1ZGx1Y21zanlqaWxranB2aXZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMzg0MjgsImV4cCI6MjA1NzgxNDQyOH0.neOVQzbJYD8EF5fQ168KPheIeJRZMRm02D2zynn86M',
   );
 
   static Future<void> initialize() async {
