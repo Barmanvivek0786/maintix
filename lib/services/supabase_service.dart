@@ -205,9 +205,10 @@ class SupabaseService {
     'SUPABASE_URL',
     defaultValue: 'https://hudlucmsjyjilkjpviva.supabase.co',
   );
+  
   static const String supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
-    defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1ZGx1Y21zanlqaWxranB2aXZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMzg0MjgsImV4cCI6MjA1NzgxNDQyOH0.neOVQzbJYD8EF5fQ168KPheIeJRZMRm02D2zynn86M',
+    defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1ZGx1Y21zanlqaWxranB2aXZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwMDQwMzksImV4cCI6MjEwMzU4MDAzOX0.nEoVQzbJYD8EF5fQ168KPheIeJRpZMRm02D2zynn86M',
   );
 
   static Future<void> initialize() async {
