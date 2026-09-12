@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
@@ -200,23 +201,70 @@ class SupabaseService {
 
   SupabaseService._();
 
-  static const String supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: 'https://hudlucmsjyjilkjpviva.supabase.co',
-  );
-  
+  // These values must be supplied at compile time. Never add a fallback key:
+  // doing so makes one build command silently use a different Supabase
+  // project from another build command.
+  static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
   static const String supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
-    defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1ZGx1Y21zanlqaWxranB2aXZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwMDQwMzksImV4cCI6MjEwMzU4MDAzOX0.nEoVQzbJYD8EF5fQ168KPheIeJRpZMRm02D2zynn86M',
   );
 
   static Future<void> initialize() async {
-    if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+    final url = supabaseUrl.trim();
+    final anonKey = supabaseAnonKey.trim();
+    final parsedUrl = Uri.tryParse(url);
+
+    if (url.isEmpty || anonKey.isEmpty) {
       throw Exception(
-        'SUPABASE_URL and SUPABASE_ANON_KEY must be defined using --dart-define.',
+        'Supabase is not configured. Build with '
+        '--dart-define=SUPABASE_URL=... and '
+        '--dart-define=SUPABASE_ANON_KEY=...',
       );
     }
-    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+
+    if (parsedUrl == null ||
+        parsedUrl.scheme != 'https' ||
+        parsedUrl.host.isEmpty ||
+        !parsedUrl.host.endsWith('.supabase.co')) {
+      throw Exception(
+        'SUPABASE_URL must be an HTTPS Supabase project URL.',
+      );
+    }
+
+    _validateKeyProject(anonKey, parsedUrl.host);
+    await Supabase.initialize(url: url, anonKey: anonKey);
+  }
+
+  /// Reject a common configuration error where a key from another project is
+  /// paired with this project's URL. Publishable keys are not JWTs and are
+  /// intentionally accepted without decoding.
+  static void _validateKeyProject(String key, String urlHost) {
+    if (key.startsWith('sb_publishable_')) return;
+
+    final parts = key.split('.');
+    if (parts.length != 3) {
+      throw Exception(
+        'SUPABASE_ANON_KEY is not a valid Supabase publishable or JWT key.',
+      );
+    }
+
+    try {
+      final payload = jsonDecode(
+        utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))),
+      );
+      final keyProjectRef = payload is Map ? payload['ref'] as String? : null;
+      final urlProjectRef = urlHost.split('.').first;
+
+      if (keyProjectRef != null &&
+          keyProjectRef.isNotEmpty &&
+          keyProjectRef != urlProjectRef) {
+        throw Exception(
+          'SUPABASE_ANON_KEY belongs to a different Supabase project.',
+        );
+      }
+    } on FormatException {
+      throw Exception('SUPABASE_ANON_KEY is not a valid JWT.');
+    }
   }
 
   SupabaseClient get client => Supabase.instance.client;

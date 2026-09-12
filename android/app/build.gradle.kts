@@ -23,9 +23,12 @@ android {
     signingConfigs {
         create("release") {
             storeFile = file("keystore.jks")
-            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "Vivek@07860786"
-            keyAlias = System.getenv("KEY_ALIAS") ?: "Maintix"
-            keyPassword = System.getenv("KEY_PASSWORD") ?: "Vivek@07860786"
+            // Empty values keep debug/profile builds usable on developer
+            // machines. The release workflow supplies all three values and
+            // the keystore; never use a source-controlled fallback.
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
+            keyAlias = System.getenv("KEY_ALIAS") ?: ""
+            keyPassword = System.getenv("KEY_PASSWORD") ?: ""
         }
     }
 

@@ -9,47 +9,45 @@ A modern Flutter-based mobile application utilizing the latest mobile developmen
 - Android Studio / VS Code with Flutter extensions
 - Android SDK / Xcode (for iOS development)
 
-## 🛠️ Installation
+## 🛠️ Installation and configuration
 
 1. Install dependencies:
-```bash
-flutter pub get
-```
+   ```bash
+   flutter pub get
+   ```
 
-2. Run the application:
+2. Copy `env.example.json` to `env.json` and replace the placeholders with
+   values from the same Supabase project. `env.json` is ignored by Git and must
+   never be committed.
 
-To run the app with environment variables defined in an env.json file, follow the steps mentioned below:
-1. Through CLI
-    ```bash
-    flutter run --dart-define-from-file=env.json
-    ```
-2. For VSCode
-    - Open .vscode/launch.json (create it if it doesn't exist).
-    - Add or modify your launch configuration to include --dart-define-from-file:
-    ```json
-    {
-        "version": "0.2.0",
-        "configurations": [
-            {
-                "name": "Launch",
-                "request": "launch",
-                "type": "dart",
-                "program": "lib/main.dart",
-                "args": [
-                    "--dart-define-from-file",
-                    "env.json"
-                ]
-            }
-        ]
-    }
-    ```
-3. For IntelliJ / Android Studio
-    - Go to Run > Edit Configurations.
-    - Select your Flutter configuration or create a new one.
-    - Add the following to the "Additional arguments" field:
-    ```bash
-    --dart-define-from-file=env.json
-    ```
+3. Run the application:
+   ```bash
+   flutter run --dart-define-from-file=env.json
+   ```
+
+The app intentionally has no fallback Supabase key. It validates that the
+Supabase URL is HTTPS and that a JWT key belongs to the same project before
+initializing. This prevents a build from silently using a different or stale
+project configuration.
+
+### GitHub Actions release build
+
+The workflow in `.github/workflows/build_release.yml` builds the signed Android
+App Bundle with Flutter 3.38.4. Add these repository secrets before pushing to
+`main` or `master`:
+
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY` (or the project's `sb_publishable_...` key)
+- `RAZORPAY_KEY_ID`
+- `ANDROID_KEYSTORE_BASE64`
+- `ANDROID_KEYSTORE_PASSWORD`
+- `ANDROID_KEYSTORE_KEY_ALIAS`
+- `ANDROID_KEY_PASSWORD`
+
+The workflow calls Supabase Auth before compiling. If the URL/key pair is
+missing or rejected, it stops without producing an AAB. Do not reuse the
+previous committed values; the Supabase project owner should issue a current
+key and rotate any credentials that were committed previously.
 
 ## 📁 Project Structure
 
