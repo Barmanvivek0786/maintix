@@ -225,11 +225,17 @@ class SupabaseService {
   bool get isLoggedIn => currentUser != null;
 
   // ─── AUTH ────────────────────────────────────────────────────────────────
-
-  Future<void> sendOtp(String email) async {
-    await client.auth.signInWithOtp(email: email, shouldCreateUser: true);
+Future<void> sendOtp(String email) async {
+  try {
+    await client.auth.signInWithOtp(
+      email: email.trim().toLowerCase(),
+      shouldCreateUser: true,
+    );
+  } catch (e) {
+    // Ye real error print karega aur screen par bhejaega
+    throw Exception(e.toString());
   }
-
+}
   Future<AuthResponse> verifyOtp(String email, String token) async {
     return await client.auth.verifyOTP(
       email: email,
