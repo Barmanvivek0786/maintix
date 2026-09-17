@@ -121,25 +121,25 @@ class _SignUpLoginScreenState extends State<SignUpLoginScreen>
                         child: FadeTransition(
                           opacity: _logoOpacity,
                           child: Container(
-                            width: 160,
-                            height: 160,
+                            width: 270,
+                            height: 100,
                             decoration: BoxDecoration(
-                              color: Colors.white.withAlpha(26),
-                              borderRadius: BorderRadius.circular(30),
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(18),
                               border: Border.all(
                                 color: AppTheme.tealAccent.withAlpha(102),
                                 width: 2,
                               ),
                             ),
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(28),
+                              borderRadius: BorderRadius.circular(16),
                               child: Image.asset(
                                 'assets/images/maintix_full_logo.png',
-                                width: 160,
-                                height: 160,
-                                fit: BoxFit.cover,
-                                cacheWidth: 320,
-                                cacheHeight: 320,
+                                width: 270,
+                                height: 100,
+                                fit: BoxFit.contain,
+                                cacheWidth: 1080,
+                                cacheHeight: 400,
                                 errorBuilder: (_, __, ___) => Center(
                                   child: Text(
                                     'M',

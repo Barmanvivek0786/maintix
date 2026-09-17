@@ -1,1 +1,2 @@
 - [Flutter verification](flutter-verification.md) — this workspace does not include the Flutter/Dart SDK, so mobile runtime checks need an external Flutter toolchain.
+- [Supabase credential validation](supabase-credential-validation.md) — validate JWT project refs and DNS before changing Supabase startup checks.

@@ -52,7 +52,7 @@ flutter_launcher_icons:
     background_color: "#1A1A2E"
     theme_color: "#1A1A2E"
   min_sdk_android: 21
-  adaptive_icon_background: "#1A1A2E"
+  adaptive_icon_background: "#FFFFFF"
   adaptive_icon_foreground: "assets/images/maintix_launcher_icon.png"
 
 flutter:

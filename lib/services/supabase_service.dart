@@ -206,12 +206,12 @@ class SupabaseService {
   // build command omits the defines.
   static const String supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
-    defaultValue: 'https://xezwcyvrmvswvukvuhfy.supabase.co',
+    defaultValue: 'https://hudlucmsjyjilkjpviva.supabase.co',
   );
   static const String supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
     defaultValue:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhlendjeXZybXZzd3Z1a3Z1aGZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAxNzE3MTcsImV4cCI6MjA1NTc0NzcxN30.iH1YyN9tT5dK3Q8mX2VbL6fR4Wp9sA1jK7h3E5zD8gQ',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1ZGx1Y21zanlqaWxranB2aXZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAxNzE3MTcsImV4cCI6MjA1NTc0NzcxN30.eOaVqzbJYD8EF5fQ168KPheIeJRzMRm02D2zynn86M',
   );
 
   static Future<void> initialize() async {

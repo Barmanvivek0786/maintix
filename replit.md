@@ -3,9 +3,10 @@
 ## Supabase configuration
 
 Supabase is initialized once in `lib/services/supabase_service.dart`. The
-project's default URL and publishable anon key are embedded for launches that
+official project URL and publishable anon key are embedded for launches that
 omit Dart defines. `SUPABASE_URL` and `SUPABASE_ANON_KEY` can still override
-those defaults at compile time for another environment.
+those defaults at compile time for another environment. The checked-in local
+`env.json` uses the same official project pair.
 
 For local development:
 
