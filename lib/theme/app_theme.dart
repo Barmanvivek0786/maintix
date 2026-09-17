@@ -189,7 +189,7 @@ class AppTheme {
     ),
     inputDecorationTheme: InputDecorationThemeData(
       filled: true,
-     GoogleFonts.plusJakartaSans(
+    hintStyle: GoogleFonts.plusJakartaSans(
         fontSize: 14,
         color: textPrimary,
       ),
@@ -372,7 +372,7 @@ class AppTheme {
     ),
     inputDecorationTheme: InputDecorationThemeData(
       filled: true,
-     GoogleFonts.plusJakartaSans(
+    hintStyle: GoogleFonts.plusJakartaSans(
         fontSize: 14,
         color: Colors.white,
       ),
