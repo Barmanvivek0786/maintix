@@ -215,8 +215,7 @@ class AppTheme {
         fontSize: 14,
         color: textSecondary,
       ),
-      hintStyle: GoogleFonts.plusJakartaSans(fontSize: 14, color: textMuted),
-    ),
+      
     chipTheme: ChipThemeData(
       backgroundColor: surfaceWhite,
       selectedColor: tealAccent,
