@@ -144,7 +144,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+              color: Colors.white,
                       ),
                     ),
                   ],
@@ -161,6 +161,14 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
         },
       ),
     );
+  }
+
+  Future<void> _refreshReviews() async {
+    final appState = context.read<AppState>();
+    await Future.wait([
+      appState.loadDbReviews(),
+      appState.checkReviewEligibility(),
+    ]);
   }
 
   void _confirmDeleteReview(BuildContext context, String reviewId) {
@@ -299,8 +307,13 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
         backgroundColor: AppTheme.background,
         body: SafeArea(
           bottom: false,
-          child: CustomScrollView(
-            slivers: [
+          child: RefreshIndicator(
+            onRefresh: _refreshReviews,
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              slivers: [
               SliverAppBar(
                 backgroundColor: AppTheme.primaryNavy,
                 pinned: true,
@@ -450,7 +463,8 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                                 initials: r.initials,
                                 photoUrl: r.photoUrl,
                               ),
-                              if (r.id != null)
+                               if (r.id != null &&
+                                   r.userId == appState.currentUserId)
                                 Positioned(
                                   top: 8,
                                   right: 8,
@@ -494,7 +508,8 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                   ]),
                 ),
               ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -536,8 +551,8 @@ class _ReviewSubmissionSheetState extends State<_ReviewSubmissionSheet> {
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
@@ -561,7 +576,7 @@ class _ReviewSubmissionSheetState extends State<_ReviewSubmissionSheet> {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
-                color: AppTheme.textPrimary,
+                color: AppTheme.inputTextColor(context),
               ),
             ),
             const SizedBox(height: 4),
@@ -578,7 +593,7 @@ class _ReviewSubmissionSheetState extends State<_ReviewSubmissionSheet> {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: AppTheme.textPrimary,
+                color: AppTheme.inputTextColor(context),
               ),
             ),
             const SizedBox(height: 6),
@@ -586,7 +601,7 @@ class _ReviewSubmissionSheetState extends State<_ReviewSubmissionSheet> {
               controller: widget.serviceController,
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
-                color: AppTheme.textPrimary,
+                color: AppTheme.inputTextColor(context),
               ),
               decoration: InputDecoration(
                 hintText: 'e.g. Water Tank Cleaning',
@@ -595,7 +610,7 @@ class _ReviewSubmissionSheetState extends State<_ReviewSubmissionSheet> {
                   color: AppTheme.textMuted,
                 ),
                 filled: true,
-                fillColor: AppTheme.background,
+                fillColor: AppTheme.inputFillColor(context),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: Colors.grey.shade200),
@@ -657,7 +672,7 @@ class _ReviewSubmissionSheetState extends State<_ReviewSubmissionSheet> {
               maxLength: 300,
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
-                color: AppTheme.textPrimary,
+                color: AppTheme.inputTextColor(context),
               ),
               decoration: InputDecoration(
                 hintText: 'Tell others about your experience...',
@@ -666,7 +681,7 @@ class _ReviewSubmissionSheetState extends State<_ReviewSubmissionSheet> {
                   color: AppTheme.textMuted,
                 ),
                 filled: true,
-                fillColor: AppTheme.background,
+                fillColor: AppTheme.inputFillColor(context),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: Colors.grey.shade200),

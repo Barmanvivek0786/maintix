@@ -11,7 +11,6 @@
 # ─── Flutter Plugin Registrant ────────────────────────────────────────────────
 -keep class io.flutter.plugins.GeneratedPluginRegistrant { *; }
 -keep class com.maintix.app.MainActivity { *; }
--keep class com.flutter_template.app.MainActivity { *; }
 
 # ─── Kotlin ───────────────────────────────────────────────────────────────────
 -keep class kotlin.** { *; }

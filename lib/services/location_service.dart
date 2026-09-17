@@ -21,7 +21,7 @@ class LocationService {
 
   static const String _locationIqKey = String.fromEnvironment(
     'LOCATIONIQ_API_KEY',
-    defaultValue: 'pk.9021ca0351eccb4c4a9ae57085c14964',
+    defaultValue: '',
   );
 
   final Dio _dio = Dio(
@@ -74,6 +74,10 @@ class LocationService {
     await Geolocator.openLocationSettings();
   }
 
+  Future<void> openAppSettings() async {
+    await Geolocator.openAppSettings();
+  }
+
   /// Get current GPS position.
   Future<Position?> getCurrentPosition() async {
     try {
@@ -92,6 +96,10 @@ class LocationService {
   /// Reverse geocode using LocationIQ API.
   /// Format: "{Area}, {City}, {State}"
   Future<String> reverseGeocodeLocationIQ(double lat, double lon) async {
+    if (_locationIqKey.isEmpty) {
+      return '${lat.toStringAsFixed(5)}, ${lon.toStringAsFixed(5)}';
+    }
+
     try {
       final response = await _dio.get(
         'https://us1.locationiq.com/v1/reverse',
@@ -150,7 +158,7 @@ class LocationService {
     } catch (e) {
       debugPrint('reverseGeocodeLocationIQ error: $e');
     }
-    return 'Location unavailable';
+    return '${lat.toStringAsFixed(5)}, ${lon.toStringAsFixed(5)}';
   }
 
   /// Full flow: request permission → get position → reverse geocode via LocationIQ.

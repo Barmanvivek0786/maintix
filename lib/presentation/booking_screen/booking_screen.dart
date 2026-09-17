@@ -103,7 +103,7 @@ class _BookingScreenState extends State<BookingScreen> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(6),
                           child: Image.asset(
-                            'assets/images/maintix-1787987681965.png',
+                            'assets/images/maintix_full_logo.png',
                             width: 56,
                             height: 56,
                             fit: BoxFit.cover,

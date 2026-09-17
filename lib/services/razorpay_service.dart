@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../services/supabase_service.dart';
 
@@ -8,44 +6,14 @@ class RazorpayService {
   static RazorpayService get instance => _instance ??= RazorpayService._();
   RazorpayService._();
 
-  // Read credentials strictly from environment variables
-  static const String _keyId = String.fromEnvironment(
+  /// The public Razorpay key is safe to ship to the checkout widget.
+  /// The secret is intentionally kept in the Supabase Edge Function.
+  static const String keyId = String.fromEnvironment(
     'RAZORPAY_KEY_ID',
     defaultValue: '',
   );
-  static const String _keySecret = String.fromEnvironment(
-    'RAZORPAY_KEY_SECRET',
-    defaultValue: '',
-  );
 
-  static const String _razorpayBaseUrl = 'https://api.razorpay.com';
-  static const String _proxyBaseUrl = String.fromEnvironment(
-    'PROXY_URL',
-    defaultValue: 'https://connector.rocket.new',
-  );
-
-  /// Returns the effective base URL — proxy on web to avoid CORS, direct on mobile
-  String get _effectiveBaseUrl {
-    if (kIsWeb) {
-      return '$_proxyBaseUrl/proxy?url=${Uri.encodeComponent(_razorpayBaseUrl)}';
-    }
-    return _razorpayBaseUrl;
-  }
-
-  /// Basic Auth header built from RAZORPAY_KEY_ID:RAZORPAY_KEY_SECRET
-  String get _basicAuth {
-    final credentials = base64Encode(utf8.encode('$_keyId:$_keySecret'));
-    return 'Basic $credentials';
-  }
-
-  Dio get _dio => Dio(
-    BaseOptions(
-      connectTimeout: const Duration(seconds: 20),
-      receiveTimeout: const Duration(seconds: 20),
-    ),
-  );
-
-  /// Step 1: Create a Razorpay order via POST /v1/orders with Basic Auth.
+  /// Step 1: Create a Razorpay order through the Supabase Edge Function.
   ///
   /// [amountRupees] — amount in rupees (e.g. 499). Converted strictly to paise internally.
   /// Returns the Razorpay order_id string on success, null on failure.
@@ -62,44 +30,53 @@ class RazorpayService {
     );
 
     try {
-      final url = '$_effectiveBaseUrl/v1/orders';
-      final response = await _dio.post(
-        url,
-        data: jsonEncode({
+      final response = await SupabaseService.instance.client.functions.invoke(
+        'create-razorpay-order',
+        body: {
           'amount': amountInPaise,
           'currency': currency,
           'receipt': receipt ?? 'rcpt_${DateTime.now().millisecondsSinceEpoch}',
-        }),
-        options: Options(
-          headers: {
-            'Authorization': _basicAuth,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        ),
+        },
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = response.data;
-        final Map<String, dynamic> body = data is String
-            ? jsonDecode(data) as Map<String, dynamic>
-            : data as Map<String, dynamic>;
-        final orderId = body['id'] as String?;
+      final data = response.data;
+      final body = data is Map
+          ? Map<String, dynamic>.from(data)
+          : <String, dynamic>{};
+      final orderId = body['id'] as String?;
+      if (orderId != null && orderId.isNotEmpty) {
         debugPrint('[Razorpay] Order created: $orderId');
         return orderId;
-      } else {
-        debugPrint(
-          '[Razorpay] createOrder failed: ${response.statusCode} ${response.data}',
-        );
       }
-    } on DioException catch (e) {
-      debugPrint(
-        '[Razorpay] createOrder DioException: ${e.message} | response: ${e.response?.data}',
-      );
+      debugPrint('[Razorpay] Edge Function returned no order id: $data');
     } catch (e) {
       debugPrint('[Razorpay] createOrder error: $e');
     }
     return null;
+  }
+
+  /// Verify the checkout signature on the server before confirming a booking.
+  Future<bool> verifyPayment({
+    required String orderId,
+    required String paymentId,
+    required String signature,
+  }) async {
+    if (orderId.isEmpty || paymentId.isEmpty || signature.isEmpty) return false;
+    try {
+      final response = await SupabaseService.instance.client.functions.invoke(
+        'verify-razorpay-payment',
+        body: {
+          'orderId': orderId,
+          'paymentId': paymentId,
+          'signature': signature,
+        },
+      );
+      final data = response.data;
+      return data is Map && data['verified'] == true;
+    } catch (e) {
+      debugPrint('[Razorpay] verifyPayment error: $e');
+      return false;
+    }
   }
 
   /// Step 2: Record successful payment in Supabase.

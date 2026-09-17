@@ -42,7 +42,7 @@ class HomeContactFooterWidget extends StatelessWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: Image.asset(
-                  'assets/images/maintix-1787987681965.png',
+                  'assets/images/maintix_full_logo.png',
                   width: 64,
                   height: 64,
                   fit: BoxFit.cover,

@@ -106,6 +106,15 @@ class _BookingStep4WidgetState extends State<BookingStep4Widget> {
     int totalAmount,
   ) async {
     if (!_agreedToTerms) return;
+    if (RazorpayService.keyId.isEmpty) {
+      Fluttertoast.showToast(
+        msg: 'Payment is temporarily unavailable. Please try again later.',
+        backgroundColor: AppTheme.error,
+        textColor: Colors.white,
+        toastLength: Toast.LENGTH_LONG,
+      );
+      return;
+    }
 
     setState(() => _processingPayment = true);
 
@@ -143,16 +152,31 @@ class _BookingStep4WidgetState extends State<BookingStep4Widget> {
       if (mounted) {
         await launchRazorpayCheckout(
           context: context,
-          keyId: const String.fromEnvironment(
-            'RAZORPAY_KEY_ID',
-            defaultValue: '',
-          ),
+          keyId: RazorpayService.keyId,
           orderId: orderId,
           amountInPaise: amountInPaise,
           email: userEmail,
           contact: userPhone,
-          onSuccess:
-              (String paymentId, String rzpOrderId, String signature) async {
+              onSuccess:
+                  (String paymentId, String rzpOrderId, String signature) async {
+                final verified = await RazorpayService.instance.verifyPayment(
+                  orderId: rzpOrderId.isNotEmpty ? rzpOrderId : orderId,
+                  paymentId: paymentId,
+                  signature: signature,
+                );
+                if (!verified) {
+                  Fluttertoast.showToast(
+                    msg: 'Payment verification failed. No booking was created.',
+                    backgroundColor: AppTheme.error,
+                    textColor: Colors.white,
+                    toastLength: Toast.LENGTH_LONG,
+                  );
+                  await RazorpayService.instance.recordPaymentFailure(
+                    razorpayOrderId: orderId,
+                    amountInPaise: amountInPaise,
+                  );
+                  return;
+                }
                 await _handlePaymentSuccess(
                   context,
                   appState,
@@ -567,7 +591,7 @@ class _BookingStep4WidgetState extends State<BookingStep4Widget> {
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: AppTheme.textPrimary,
+                          color: AppTheme.inputTextColor(context),
                           letterSpacing: 1.5,
                         ),
                         decoration: InputDecoration(
@@ -580,7 +604,7 @@ class _BookingStep4WidgetState extends State<BookingStep4Widget> {
                           filled: true,
                           fillColor: _couponValid
                               ? AppTheme.success.withAlpha(15)
-                              : AppTheme.background,
+                               : AppTheme.inputFillColor(context),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                             borderSide: BorderSide(

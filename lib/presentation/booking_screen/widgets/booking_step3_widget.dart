@@ -53,7 +53,7 @@ class _BookingStep3WidgetState extends State<BookingStep3Widget> {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
-                color: AppTheme.textPrimary,
+                color: AppTheme.inputTextColor(context),
               ),
             ),
             const SizedBox(height: 4),
@@ -74,7 +74,7 @@ class _BookingStep3WidgetState extends State<BookingStep3Widget> {
               maxLines: 3,
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 14,
-                color: AppTheme.textPrimary,
+                color: AppTheme.inputTextColor(context),
               ),
               decoration: InputDecoration(
                 hintText: 'e.g. 12, Gandhi Nagar, Near Bus Stand, Satna',
@@ -111,7 +111,7 @@ class _BookingStep3WidgetState extends State<BookingStep3Widget> {
               controller: _landmarkController,
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 14,
-                color: AppTheme.textPrimary,
+                color: AppTheme.inputTextColor(context),
               ),
               decoration: InputDecoration(
                 hintText: 'e.g. Near Birla Temple, Opposite SBI Bank',
@@ -139,7 +139,7 @@ class _BookingStep3WidgetState extends State<BookingStep3Widget> {
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 14,
-                color: AppTheme.textPrimary,
+                color: AppTheme.inputTextColor(context),
               ),
               decoration: InputDecoration(
                 hintText: '10-digit mobile number',
@@ -159,7 +159,7 @@ class _BookingStep3WidgetState extends State<BookingStep3Widget> {
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimary,
+                    color: AppTheme.inputTextColor(context),
                   ),
                 ),
               ),

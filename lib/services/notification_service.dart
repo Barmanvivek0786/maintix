@@ -149,7 +149,7 @@ class NotificationService {
         ticker: 'ticker',
         fullScreenIntent: false,
         visibility: NotificationVisibility.public,
-        styleInformation: BigTextStyleInformation(''),
+         styleInformation: BigTextStyleInformation(body),
       );
       const iosDetails = DarwinNotificationDetails(
         presentAlert: true,

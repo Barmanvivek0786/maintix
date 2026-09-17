@@ -62,7 +62,7 @@ class ProfileMenuWidget extends StatelessWidget {
                   controller: subjectController,
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 13,
-                    color: AppTheme.textPrimary,
+                    color: AppTheme.inputTextColor(context),
                   ),
                   decoration: InputDecoration(
                     labelText: 'Subject',
@@ -71,7 +71,7 @@ class ProfileMenuWidget extends StatelessWidget {
                       color: AppTheme.textSecondary,
                     ),
                     filled: true,
-                    fillColor: AppTheme.background,
+                    fillColor: AppTheme.inputFillColor(context),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                       borderSide: BorderSide(color: AppTheme.divider),
@@ -99,7 +99,7 @@ class ProfileMenuWidget extends StatelessWidget {
                   maxLines: 4,
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 13,
-                    color: AppTheme.textPrimary,
+                    color: AppTheme.inputTextColor(context),
                   ),
                   decoration: InputDecoration(
                     labelText: 'Message',
@@ -109,7 +109,7 @@ class ProfileMenuWidget extends StatelessWidget {
                     ),
                     alignLabelWithHint: true,
                     filled: true,
-                    fillColor: AppTheme.background,
+                    fillColor: AppTheme.inputFillColor(context),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                       borderSide: BorderSide(color: AppTheme.divider),

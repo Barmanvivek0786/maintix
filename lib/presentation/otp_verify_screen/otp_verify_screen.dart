@@ -490,7 +490,7 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w700,
-                                color: AppTheme.textPrimary,
+                                color: AppTheme.inputTextColor(context),
                               ),
                               decoration: InputDecoration(
                                 counterText: '',

@@ -16,6 +16,8 @@ import 'core/app_export.dart';
 void main() {
   // CRITICAL: Must be the very first call before any async work or plugin use.
   WidgetsFlutterBinding.ensureInitialized();
+  // Render a branded, animated boot surface immediately while services load.
+  runApp(const _BootSplash());
 
   runZonedGuarded(
     () async {
@@ -81,6 +83,42 @@ void main() {
       );
     },
   );
+}
+
+class _BootSplash extends StatelessWidget {
+  const _BootSplash();
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(
+                'assets/images/maintix_m_logo.png',
+                width: 132,
+                height: 132,
+                fit: BoxFit.contain,
+              ),
+              const SizedBox(height: 28),
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: Color(0xFF00A8CC),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// Displayed when a fatal startup error occurs — shows the ACTUAL error
@@ -206,19 +244,7 @@ class _MyAppState extends State<MyApp> {
               if (!_appState.isLoggedIn) {
                 await _appState.loginWithSupabase();
               }
-              final userId = session.user.id;
-              NotificationService.instance.subscribeToUserNotifications(
-                userId,
-                (notification) {
-                  _appState.refreshUnreadNotificationCount();
-                },
-              );
-              NotificationService.instance.subscribeToAdminBroadcasts((
-                title,
-                body,
-              ) {
-                _appState.refreshUnreadNotificationCount();
-              });
+              _subscribeToNotifications(session.user.id);
               if (_initialized &&
                   appRouter.routerDelegate.currentConfiguration.uri
                           .toString() !=
@@ -249,18 +275,30 @@ class _MyAppState extends State<MyApp> {
               if (session != null && !_appState.isLoggedIn) {
                 await _appState.loginWithSupabase();
               }
+              if (session != null) _subscribeToNotifications(session.user.id);
               _initialized = true;
             } else if (event == AuthChangeEvent.tokenRefreshed &&
                 session != null) {
               if (!_appState.isLoggedIn) {
                 await _appState.loginWithSupabase();
               }
+              _subscribeToNotifications(session.user.id);
             }
           });
     } catch (e) {
       debugPrint('Auth listener init error (Supabase not ready): $e');
       _initialized = true;
     }
+  }
+
+  void _subscribeToNotifications(String userId) {
+    NotificationService.instance.subscribeToUserNotifications(
+      userId,
+      (_) => _appState.refreshUnreadNotificationCount(),
+    );
+    NotificationService.instance.subscribeToAdminBroadcasts(
+      (_, __) => _appState.refreshUnreadNotificationCount(),
+    );
   }
 
   @override
@@ -276,7 +314,7 @@ class _MyAppState extends State<MyApp> {
       child: Sizer(
         builder: (context, orientation, screenType) {
           precacheImage(
-            const AssetImage('assets/images/maintix-1787987681965.png'),
+            const AssetImage('assets/images/maintix_full_logo.png'),
             context,
           );
           return Consumer<AppState>(

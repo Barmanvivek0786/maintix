@@ -371,7 +371,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     controller: _nameController,
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 15,
-                      color: AppTheme.textPrimary,
+                      color: AppTheme.inputTextColor(context),
                     ),
                     decoration: InputDecoration(
                       hintText: 'Enter your full name',
@@ -397,7 +397,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     keyboardType: TextInputType.phone,
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 15,
-                      color: AppTheme.textPrimary,
+                      color: AppTheme.inputTextColor(context),
                     ),
                     decoration: InputDecoration(
                       hintText: '+91 XXXXX XXXXX',
@@ -416,7 +416,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     controller: _cityController,
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 15,
-                      color: AppTheme.textPrimary,
+                      color: AppTheme.inputTextColor(context),
                     ),
                     decoration: InputDecoration(
                       hintText: 'e.g. Satna, Madhya Pradesh',

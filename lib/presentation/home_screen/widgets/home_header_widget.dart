@@ -60,7 +60,7 @@ class HomeHeaderWidget extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: Image.asset(
-                        'assets/images/maintix-1787987681965.png',
+                        'assets/images/maintix_full_logo.png',
                         width: 72,
                         height: 72,
                         fit: BoxFit.cover,

@@ -19,6 +19,16 @@ class AppTheme {
   static const Color divider = Color(0xFFE8EDF3);
   static const Color cardShadow = Color(0x1A0F2942);
 
+  static Color inputTextColor(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+      ? Colors.white
+      : textPrimary;
+
+  static Color inputFillColor(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+      ? const Color(0xFF1E2A38)
+      : surfaceWhite;
+
   /// Call this whenever the theme changes to keep status bar icons in sync.
   static void applySystemUI(ThemeMode mode) {
     final isDark = mode == ThemeMode.dark;
@@ -179,6 +189,10 @@ class AppTheme {
     ),
     inputDecorationTheme: InputDecorationThemeData(
       filled: true,
+      textStyle: GoogleFonts.plusJakartaSans(
+        fontSize: 14,
+        color: textPrimary,
+      ),
       fillColor: surfaceWhite,
       contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
@@ -358,6 +372,10 @@ class AppTheme {
     ),
     inputDecorationTheme: InputDecorationThemeData(
       filled: true,
+      textStyle: GoogleFonts.plusJakartaSans(
+        fontSize: 14,
+        color: Colors.white,
+      ),
       fillColor: Color(0xFF1E2A38),
       contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(

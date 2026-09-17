@@ -305,7 +305,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
               keyboardType: TextInputType.number,
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 14,
-                color: AppTheme.textPrimary,
+                color: AppTheme.inputTextColor(context),
               ),
               decoration: InputDecoration(
                 labelText: 'New Coin Balance',
@@ -314,7 +314,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
                   color: AppTheme.textSecondary,
                 ),
                 filled: true,
-                fillColor: AppTheme.background,
+                fillColor: AppTheme.inputFillColor(context),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide(color: AppTheme.divider),
@@ -606,7 +606,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
       maxLines: maxLines,
       style: GoogleFonts.plusJakartaSans(
         fontSize: 14,
-        color: AppTheme.textPrimary,
+        color: AppTheme.inputTextColor(context),
       ),
       decoration: InputDecoration(
         labelText: label,
@@ -620,7 +620,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
           color: AppTheme.textSecondary.withAlpha(128),
         ),
         filled: true,
-        fillColor: AppTheme.surfaceWhite,
+        fillColor: AppTheme.inputFillColor(context),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: AppTheme.divider),

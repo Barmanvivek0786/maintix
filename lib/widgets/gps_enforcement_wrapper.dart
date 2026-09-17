@@ -65,7 +65,12 @@ class _GpsEnforcementWrapperState extends State<GpsEnforcementWrapper>
         return Stack(
           children: [
             widget.child,
-            if (appState.gpsServiceDisabled) const _GpsDisabledOverlay(),
+            if (appState.gpsServiceDisabled ||
+                appState.locationPermissionDenied)
+              _GpsDisabledOverlay(
+                permissionDenied: appState.locationPermissionDenied &&
+                    !appState.gpsServiceDisabled,
+              ),
           ],
         );
       },
@@ -74,7 +79,8 @@ class _GpsEnforcementWrapperState extends State<GpsEnforcementWrapper>
 }
 
 class _GpsDisabledOverlay extends StatelessWidget {
-  const _GpsDisabledOverlay();
+  final bool permissionDenied;
+  const _GpsDisabledOverlay({this.permissionDenied = false});
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +121,7 @@ class _GpsDisabledOverlay extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'GPS Required',
+                   permissionDenied ? 'Location Permission Required' : 'GPS Required',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
@@ -124,7 +130,9 @@ class _GpsDisabledOverlay extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Maintix requires your device GPS to be turned on to provide accurate service location and booking.',
+                   permissionDenied
+                       ? 'Allow location access in Settings so Maintix can provide accurate service location and booking.'
+                       : 'Maintix requires your device GPS to be turned on to provide accurate service location and booking.',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 13,
                     color: AppTheme.textSecondary,
@@ -137,11 +145,15 @@ class _GpsDisabledOverlay extends StatelessWidget {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () async {
-                      await LocationService.instance.openLocationSettings();
+                       if (permissionDenied) {
+                         await LocationService.instance.openAppSettings();
+                       } else {
+                         await LocationService.instance.openLocationSettings();
+                       }
                     },
                     icon: const Icon(Icons.settings_rounded, size: 18),
                     label: Text(
-                      'Enable GPS',
+                       permissionDenied ? 'Allow Location' : 'Enable GPS',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -160,7 +172,9 @@ class _GpsDisabledOverlay extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'App will resume automatically once GPS is enabled.',
+                   permissionDenied
+                       ? 'App will resume automatically once location access is allowed.'
+                       : 'App will resume automatically once GPS is enabled.',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 11,
                     color: AppTheme.textMuted,

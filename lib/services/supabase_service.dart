@@ -494,15 +494,12 @@ Future<void> sendOtp(String email) async {
   // ─── REVIEWS ─────────────────────────────────────────────────────────────
 
   Future<List<ReviewRecord>> fetchReviews() async {
-    final user = currentUser;
-    if (user == null) return [];
-
     try {
-      // Only fetch approved reviews for the public app
+      // Approved reviews are intentionally public. Do not scope this query
+      // to currentUser: the Reviews tab must work for signed-out visitors too.
       final data = await client
           .from('reviews')
           .select()
-          .eq('user_id', user.id)
           .eq('is_approved', true)
           .order('created_at', ascending: false);
 
@@ -543,8 +540,15 @@ Future<void> sendOtp(String email) async {
   }
 
   Future<bool> deleteReview(String reviewId) async {
+    final user = currentUser;
+    if (user == null) return false;
+
     try {
-      await client.from('reviews').delete().eq('id', reviewId);
+      await client
+          .from('reviews')
+          .delete()
+          .eq('id', reviewId)
+          .eq('user_id', user.id);
       return true;
     } catch (e) {
       debugPrint('deleteReview error: $e');

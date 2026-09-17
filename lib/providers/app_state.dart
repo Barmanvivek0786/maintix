@@ -33,6 +33,7 @@ class BookingModel {
 
 class ReviewModel {
   final String? id;
+  final String? userId;
   final String name;
   final String initials;
   final int avatarColorValue;
@@ -44,6 +45,7 @@ class ReviewModel {
 
   ReviewModel({
     this.id,
+    this.userId,
     required this.name,
     required this.initials,
     required this.avatarColorValue,
@@ -681,8 +683,13 @@ class AppState extends ChangeNotifier {
           .toUpperCase();
       return ReviewModel(
         id: r.id,
-        name: _userName,
-        initials: initials.isNotEmpty ? initials : 'U',
+        userId: r.userId,
+        name: r.userId == currentUserId && _userName.isNotEmpty
+            ? _userName
+            : 'Verified Customer',
+        initials: r.userId == currentUserId && initials.isNotEmpty
+            ? initials
+            : 'VC',
         avatarColorValue: 0xFF0D9488,
         rating: r.rating.round(),
         review: r.reviewText,
@@ -935,6 +942,7 @@ class AppState extends ChangeNotifier {
 
   /// Fetch GPS location, reverse geocode via LocationIQ, save to DB, and update state.
   Future<void> fetchAndSaveLocation() async {
+    if (_locationLoading) return;
     _locationLoading = true;
     _locationPermissionDenied = false;
     notifyListeners();
@@ -991,6 +999,20 @@ class AppState extends ChangeNotifier {
     } catch (e) {
       debugPrint('loadSavedLocation error: $e');
     }
+  }
+
+  /// Refresh the data shown by the main app surfaces without resetting cart
+  /// state. Location is opt-in so a normal list refresh never surprises users
+  /// with a second permission prompt.
+  Future<void> refreshAllData({bool refreshLocation = false}) async {
+    final jobs = <Future<void>>[
+      loadDbBookings(),
+      loadDbReviews(),
+      refreshUnreadNotificationCount(),
+      _loadProfileStats(),
+    ];
+    if (refreshLocation) jobs.add(fetchAndSaveLocation());
+    await Future.wait(jobs);
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────

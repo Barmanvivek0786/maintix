@@ -32,7 +32,7 @@ class CustomImageWidget extends StatelessWidget {
     this.radius,
     this.margin,
     this.border,
-    this.placeHolder = 'assets/images/no-image.jpg',
+    this.placeHolder = 'assets/images/maintix_m_logo.png',
     this.errorWidget,
     this.semanticLabel,
   });

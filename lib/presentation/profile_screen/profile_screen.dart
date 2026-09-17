@@ -37,25 +37,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: AppTheme.background,
         body: SafeArea(
           bottom: false,
-          child: CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              SliverToBoxAdapter(child: ProfileHeaderWidget()),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                sliver: SliverToBoxAdapter(child: ProfileStatsWidget()),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                sliver: SliverToBoxAdapter(child: ProfileAdWidget()),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                sliver: SliverToBoxAdapter(child: ProfileMenuWidget()),
-              ),
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
-            ],
-          ),
+           child: RefreshIndicator(
+             onRefresh: () => context.read<AppState>().refreshAllData(
+               refreshLocation: false,
+             ),
+             child: CustomScrollView(
+               physics: const AlwaysScrollableScrollPhysics(
+                 parent: BouncingScrollPhysics(),
+               ),
+               slivers: [
+                 SliverToBoxAdapter(child: ProfileHeaderWidget()),
+                 SliverPadding(
+                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                   sliver: SliverToBoxAdapter(child: ProfileStatsWidget()),
+                 ),
+                 SliverPadding(
+                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                   sliver: SliverToBoxAdapter(child: ProfileAdWidget()),
+                 ),
+                 SliverPadding(
+                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                   sliver: SliverToBoxAdapter(child: ProfileMenuWidget()),
+                 ),
+                 const SliverToBoxAdapter(child: SizedBox(height: 100)),
+               ],
+             ),
+           ),
         ),
       ),
     );

@@ -134,7 +134,7 @@ class _SignUpLoginScreenState extends State<SignUpLoginScreen>
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(28),
                               child: Image.asset(
-                                'assets/images/maintix-1787987681965.png',
+                                'assets/images/maintix_full_logo.png',
                                 width: 160,
                                 height: 160,
                                 fit: BoxFit.cover,
@@ -200,7 +200,7 @@ class _SignUpLoginScreenState extends State<SignUpLoginScreen>
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 22,
                             fontWeight: FontWeight.w700,
-                            color: AppTheme.textPrimary,
+                            color: AppTheme.inputTextColor(context),
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -248,7 +248,7 @@ class _SignUpLoginScreenState extends State<SignUpLoginScreen>
                           keyboardType: TextInputType.emailAddress,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 15,
-                            color: AppTheme.textPrimary,
+                            color: AppTheme.inputTextColor(context),
                           ),
                           decoration: InputDecoration(
                             labelText: 'Email Address',

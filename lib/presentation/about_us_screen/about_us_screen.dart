@@ -50,34 +50,29 @@ class AboutUsScreen extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          color: AppTheme.tealAccent.withAlpha(38),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppTheme.tealAccent.withAlpha(102),
-                            width: 2,
-                          ),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxWidth: 240,
+                          maxHeight: 140,
                         ),
-                        child: const Icon(
-                          Icons.water_drop_rounded,
-                          color: AppTheme.tealAccent,
-                          size: 36,
+                        child: Image.asset(
+                          'assets/images/maintix_full_logo.png',
+                          width: 220,
+                          height: 132,
+                          fit: BoxFit.contain,
+                          cacheWidth: 440,
+                          cacheHeight: 264,
+                          errorBuilder: (_, __, ___) => Text(
+                            'Maintix',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 14),
-                      Text(
-                        'Maintix',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
                       Text(
                         'Trusted Water Tank Cleaning Services',
                         style: GoogleFonts.plusJakartaSans(
