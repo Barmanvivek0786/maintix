@@ -138,7 +138,7 @@ class NotificationService {
   }) async {
     if (kIsWeb || !_initialized) return;
     try {
-      const androidDetails = AndroidNotificationDetails(
+       androidDetails = AndroidNotificationDetails(
         'maintix_channel',
         'Maintix Notifications',
         channelDescription: 'Maintix app notifications',
