@@ -138,7 +138,7 @@ class NotificationService {
   }) async {
     if (kIsWeb || !_initialized) return;
     try {
-       androidDetails = AndroidNotificationDetails(
+      final androidDetails = AndroidNotificationDetails(
         'maintix_channel',
         'Maintix Notifications',
         channelDescription: 'Maintix app notifications',
@@ -157,7 +157,7 @@ class NotificationService {
         presentSound: true,
         interruptionLevel: InterruptionLevel.active,
       );
-      const details = NotificationDetails(
+      final details = NotificationDetails(
         android: androidDetails,
         iOS: iosDetails,
       );
