@@ -1,0 +1,1 @@
+- [Flutter verification](flutter-verification.md) — this workspace does not include the Flutter/Dart SDK, so mobile runtime checks need an external Flutter toolchain.

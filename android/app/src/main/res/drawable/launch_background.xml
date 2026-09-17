@@ -2,9 +2,12 @@
 <!-- Modify this file to customize your launch splash screen -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@android:color/white" />
-    <item>
+    <item
+        android:width="280dp"
+        android:height="280dp"
+        android:gravity="center">
         <bitmap
-            android:gravity="center"
+            android:gravity="fill"
             android:src="@drawable/maintix_m_logo" />
     </item>
 </layer-list>
