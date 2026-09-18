@@ -190,8 +190,8 @@ class StartupErrorApp extends StatelessWidget {
                 const SizedBox(height: 24),
                 Text(
                   'Common fixes:\n'
-                  '• Ensure --dart-define=SUPABASE_URL=... is set in your build command\n'
-                  '• Ensure --dart-define=SUPABASE_ANON_KEY=... is set\n'
+                  '• Verify the Supabase URL and anon key belong to the same project\n'
+                  '• Optional: override them with --dart-define values\n'
                   '• Check GitHub Actions secrets are correctly mapped',
                   style: GoogleFonts.inter(
                     fontSize: 12,
