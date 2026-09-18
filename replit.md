@@ -3,20 +3,22 @@
 ## Supabase configuration
 
 Supabase is initialized once in `lib/services/supabase_service.dart` using the
-Maintix project's public URL and anon key. The checked-in defaults make the
-first build work without extra setup; CI or local builds may override them with
-`--dart-define=SUPABASE_URL=...` and
-`--dart-define=SUPABASE_ANON_KEY=...`. The anon key is a public client
-credential; never put a Supabase service-role key in the app.
+Maintix project's public URL and a compile-time anon key. The anon key is
+loaded from the `SUPABASE_ANON_KEY` workspace secret by
+`tool/flutter_with_env.sh`; it is intentionally not stored in source control.
+The anon key is a public client credential; never put a Supabase service-role
+key in the app.
 
 For local development:
 
 ```bash
-flutter run
+bash tool/flutter_with_env.sh run
 ```
 
 Use a URL and key from the same Supabase project. The app rejects non-HTTPS
 Supabase URLs and mismatched JWT project references before making auth calls.
+The wrapper also supports `build apk`, `build ios`, `analyze`, and other
+Flutter subcommands.
 
 ## App icons
 

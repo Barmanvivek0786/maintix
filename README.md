@@ -16,13 +16,14 @@ A modern Flutter-based mobile application utilizing the latest mobile developmen
    flutter pub get
    ```
 
-2. Supabase is configured for the Maintix project in
-   `lib/services/supabase_service.dart`, so no Supabase dart-defines are
-   required for local or release builds.
+2. Add `SUPABASE_ANON_KEY` as a local/Replit secret, then run Flutter through
+   the provided wrapper so the key is injected at compile time. The public
+   project URL defaults to the Maintix project and can be overridden with
+   `SUPABASE_URL`.
 
 3. Run the application:
    ```bash
-   flutter run
+   bash tool/flutter_with_env.sh run
    ```
 
 The app validates that the configured Supabase URL is HTTPS and that the JWT

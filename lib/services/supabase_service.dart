@@ -201,23 +201,29 @@ class SupabaseService {
 
   SupabaseService._();
 
-  // Maintix is bound to this Supabase project. Keep the public URL and anon
-  // key together so local, manual, and CI builds all initialize the same
-  // backend without requiring a fragile dart-define configuration.
+  // The URL is public configuration. The anon key is injected at Flutter
+  // compile time so it can come from Replit Secrets/CI without being kept in
+  // source control. Supabase anon keys are client credentials, not service
+  // role keys, and are safe to ship in the compiled app.
   static const String supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
     defaultValue: 'https://hudlucmsjyjilkjpviva.supabase.co',
   );
   static const String supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
-    defaultValue:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1ZGx1Y21zanlqaWxranB2aXZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDgwMDQwMzksImV4cCI6MjEwMzU4MDAzOX0.nEoVQzbJYD8EF5fQ168KPheIeJRpZMRm02D2zynn86M',
   );
 
   static Future<void> initialize() async {
     final url = supabaseUrl.trim();
     final anonKey = supabaseAnonKey.trim();
     final parsedUrl = Uri.tryParse(url);
+
+    if (anonKey.isEmpty) {
+      throw Exception(
+        'SUPABASE_ANON_KEY is missing. Run through '
+        'tool/flutter_with_env.sh or pass --dart-define=SUPABASE_ANON_KEY=... .',
+      );
+    }
 
     if (parsedUrl == null ||
         parsedUrl.scheme != 'https' ||
