@@ -16,19 +16,19 @@ A modern Flutter-based mobile application utilizing the latest mobile developmen
    flutter pub get
    ```
 
-2. Optional: copy `env.example.json` to `env.json` and replace the placeholders
-   with values from the same Supabase project. `env.json` is ignored by Git and
-   must never be committed. If no Dart defines are supplied, the app uses the
-   configured project defaults in `lib/services/supabase_service.dart`.
+2. Copy `env.example.json` to `env.json` and replace the placeholders with
+   values from the same Supabase project. `env.json` is ignored by Git and must
+   never be committed.
 
 3. Run the application:
    ```bash
    flutter run --dart-define-from-file=env.json
    ```
 
-The app validates that the Supabase URL is HTTPS and that a JWT key belongs to
-the same project before initializing. Dart defines override the defaults for
-other environments.
+The app intentionally has no fallback Supabase key. It validates that the
+Supabase URL is HTTPS and that a JWT key belongs to the same project before
+initializing. This prevents a build from silently using a different or stale
+project configuration.
 
 ### Razorpay order setup
 

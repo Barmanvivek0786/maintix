@@ -201,23 +201,26 @@ class SupabaseService {
 
   SupabaseService._();
 
-  // Dart defines can override these values for another environment. The
-  // project defaults keep local and release launches from failing when a
-  // build command omits the defines.
-  static const String supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: 'https://hudlucmsjyjilkjpviva.supabase.co',
-  );
+  // These values must be supplied at compile time. Never add a fallback key:
+  // doing so makes one build command silently use a different Supabase
+  // project from another build command.
+  static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
   static const String supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
-    defaultValue:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1ZGx1Y21zanlqaWxranB2aXZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAxNzE3MTcsImV4cCI6MjA1NTc0NzcxN30.eOaVqzbJYD8EF5fQ168KPheIeJRzMRm02D2zynn86M',
   );
 
   static Future<void> initialize() async {
     final url = supabaseUrl.trim();
     final anonKey = supabaseAnonKey.trim();
     final parsedUrl = Uri.tryParse(url);
+
+    if (url.isEmpty || anonKey.isEmpty) {
+      throw Exception(
+        'Supabase is not configured. Build with '
+        '--dart-define=SUPABASE_URL=... and '
+        '--dart-define=SUPABASE_ANON_KEY=...',
+      );
+    }
 
     if (parsedUrl == null ||
         parsedUrl.scheme != 'https' ||

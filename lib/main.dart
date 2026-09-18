@@ -191,9 +191,9 @@ class StartupErrorApp extends StatelessWidget {
                 const SizedBox(height: 24),
                 Text(
                   'Common fixes:\n'
-                  '• Check that the device has an internet connection\n'
-                  '• Confirm the configured Supabase project is reachable\n'
-                  '• Use --dart-define values only when switching environments',
+                  '• Ensure --dart-define=SUPABASE_URL=... is set in your build command\n'
+                  '• Ensure --dart-define=SUPABASE_ANON_KEY=... is set\n'
+                  '• Check GitHub Actions secrets are correctly mapped',
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     color: const Color(0xFF888888),
