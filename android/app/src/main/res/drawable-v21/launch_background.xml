@@ -5,6 +5,6 @@
     <item>
         <bitmap
             android:gravity="center"
-            android:src="@drawable/maintix_m_logo" />
+            android:src="@drawable/maintix_splash_logo" />
     </item>
 </layer-list>

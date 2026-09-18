@@ -201,26 +201,18 @@ class SupabaseService {
 
   SupabaseService._();
 
-  // These values must be supplied at compile time. Never add a fallback key:
-  // doing so makes one build command silently use a different Supabase
-  // project from another build command.
-  static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-  static const String supabaseAnonKey = String.fromEnvironment(
-    'SUPABASE_ANON_KEY',
-  );
+  // Maintix is bound to this Supabase project. Keep the public URL and anon
+  // key together so local, manual, and CI builds all initialize the same
+  // backend without requiring a fragile dart-define configuration.
+  static const String supabaseUrl =
+      'https://hudlucmsjyjjlkjpviva.supabase.co';
+  static const String supabaseAnonKey =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1ZGx1Y21zanlqaWxranB2aXZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwMDQwMzksImV4cCI6MjEwMzU4MDAzOX0.nEoVQzbJYD8EF5fQ168KPheIeJRpZMRm02D2zynn86M';
 
   static Future<void> initialize() async {
     final url = supabaseUrl.trim();
     final anonKey = supabaseAnonKey.trim();
     final parsedUrl = Uri.tryParse(url);
-
-    if (url.isEmpty || anonKey.isEmpty) {
-      throw Exception(
-        'Supabase is not configured. Build with '
-        '--dart-define=SUPABASE_URL=... and '
-        '--dart-define=SUPABASE_ANON_KEY=...',
-      );
-    }
 
     if (parsedUrl == null ||
         parsedUrl.scheme != 'https' ||

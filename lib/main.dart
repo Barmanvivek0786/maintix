@@ -40,8 +40,7 @@ void main() {
         debugPrint('Flutter error caught: ${details.exceptionAsString()}');
       };
 
-      // Initialize Supabase — wrapped in try/catch so a missing dart-define
-      // in release builds does not crash the app before the UI renders.
+      // Initialize Supabase before creating the authenticated app shell.
       String? startupError;
       try {
         await SupabaseService.initialize();
@@ -231,7 +230,8 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _initAuthListener() {
-    // Guard against Supabase not being initialized (e.g. missing dart-define)
+    // Guard the listener so a transient plugin/auth initialization error does
+    // not prevent the rest of the app shell from rendering.
     try {
       _authSubscription = Supabase.instance.client.auth.onAuthStateChange
           .listen((data) async {

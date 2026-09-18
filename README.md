@@ -16,19 +16,18 @@ A modern Flutter-based mobile application utilizing the latest mobile developmen
    flutter pub get
    ```
 
-2. Copy `env.example.json` to `env.json` and replace the placeholders with
-   values from the same Supabase project. `env.json` is ignored by Git and must
-   never be committed.
+2. Supabase is configured for the Maintix project in
+   `lib/services/supabase_service.dart`, so no Supabase dart-defines are
+   required for local or release builds.
 
 3. Run the application:
    ```bash
-   flutter run --dart-define-from-file=env.json
+   flutter run
    ```
 
-The app intentionally has no fallback Supabase key. It validates that the
-Supabase URL is HTTPS and that a JWT key belongs to the same project before
-initializing. This prevents a build from silently using a different or stale
-project configuration.
+The app validates that the configured Supabase URL is HTTPS and that the JWT
+key belongs to the same project before initializing. This prevents a build
+from silently using a different or stale project configuration.
 
 ### Razorpay order setup
 
@@ -55,26 +54,19 @@ delivery, which is not present in the supplied archive.
 ### GitHub Actions release build
 
 The workflow in `.github/workflows/build_release.yml` builds, analyzes, tests,
-and signs the Android App Bundle with Flutter 3.38.4. Add these repository
+and signs split Android release APKs with Flutter 3.38.4. Add these repository
 secrets before pushing to
 `main` or `master`:
 
-- `SUPABASE_URL`
-- `SUPABASE_ANON_KEY` (or the project's `sb_publishable_...` key)
 - `RAZORPAY_KEY_ID`
 - `ANDROID_KEYSTORE_BASE64`
 - `ANDROID_KEYSTORE_PASSWORD`
 - `ANDROID_KEYSTORE_KEY_ALIAS`
 - `ANDROID_KEY_PASSWORD`
 
-The workflow calls Supabase Auth before compiling. If the URL/key pair is
-missing or rejected, it stops without producing an AAB. Do not reuse the
-previous committed values; the Supabase project owner should issue a current
-key and rotate any credentials that were committed previously.
-
-The credentials previously pasted into chat should be rotated before any
-production release. Only the replacement values should be stored in GitHub
-Actions/Supabase secrets.
+Supabase credentials are not required as GitHub Actions secrets because they
+are fixed in the app configuration. The workflow fails if any split APK is
+50 MB or larger.
 
 ### Branding assets
 
@@ -83,11 +75,9 @@ The canonical brand files are:
 - `assets/images/maintix_full_logo.png` — full Maintix wordmark for headers and launcher icons.
 - `assets/images/maintix_m_logo.png` — transparent standalone M mark for the white native/animated splash.
 
-Launcher icons can be regenerated after dependency installation with:
-
-```bash
-dart run flutter_launcher_icons
-```
+The supplied launcher icon set is already installed in the Android density
+folders and the iOS `AppIcon.appiconset`. Do not regenerate it from the
+wordmark configuration, because that would replace the supplied icon artwork.
 
 ## 📁 Project Structure
 

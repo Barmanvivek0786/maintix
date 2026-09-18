@@ -1,4 +1,4 @@
-name: Build Release AAB
+name: Build Release APKs
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-aab:
-    name: Build Android App Bundle
+    name: Build Android Release APKs
     runs-on: ubuntu-latest
 
     steps:
@@ -38,35 +38,12 @@ jobs:
       - name: Run Flutter tests
         run: flutter test
 
-      - name: Generate launcher icons
-        run: dart run flutter_launcher_icons
-
       - name: Decode keystore
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
 
-      - name: Validate Supabase credentials
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-        run: |
-          status=$(curl -sS -o /tmp/supabase-auth-response.txt \
-            -w "%{http_code}" \
-            "${SUPABASE_URL}/auth/v1/settings" \
-            -H "apikey: ${SUPABASE_ANON_KEY}")
-
-          echo "Supabase Auth HTTP status: ${status}"
-
-          if [ "$status" != "200" ]; then
-            echo "The Supabase URL/key pair was rejected."
-            cat /tmp/supabase-auth-response.txt
-            exit 1
-          fi
-
       - name: Create Flutter defines
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           RAZORPAY_KEY_ID: ${{ secrets.RAZORPAY_KEY_ID }}
         run: |
           python3 - <<'PY'
@@ -74,8 +51,6 @@ jobs:
           import os
           
           required = [
-              "SUPABASE_URL",
-              "SUPABASE_ANON_KEY",
               "RAZORPAY_KEY_ID",
           ]
           
@@ -90,7 +65,7 @@ jobs:
               )
           PY
 
-      - name: Build release AAB
+      - name: Build split release APKs
         env:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEYSTORE_KEY_ALIAS }}
@@ -98,17 +73,35 @@ jobs:
         run: |
           flutter clean
           flutter pub get
-          flutter build appbundle \
+          flutter build apk \
             --release \
+            --split-per-abi \
             --dart-define-from-file=dart_defines.json
+
+      - name: Check APK sizes
+        run: |
+          shopt -s nullglob
+          apks=(build/app/outputs/flutter-apk/*-release.apk)
+          if [ "${#apks[@]}" -eq 0 ]; then
+            echo "No split release APKs were produced."
+            exit 1
+          fi
+          for apk in "${apks[@]}"; do
+            size=$(stat -c%s "$apk")
+            echo "$(basename "$apk"): $size bytes"
+            if [ "$size" -ge 52428800 ]; then
+              echo "$(basename "$apk") is not under 50 MB."
+              exit 1
+            fi
+          done
 
       - name: Remove generated secrets
         if: always()
         run: rm -f dart_defines.json
 
-      - name: Upload AAB artifact
+      - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: release-aab
-          path: build/app/outputs/bundle/release/app-release.aab
+          name: release-apks
+          path: build/app/outputs/flutter-apk/*-release.apk
           retention-days: 30
