@@ -60,8 +60,7 @@ class AboutUsScreen extends StatelessWidget {
                           width: 220,
                           height: 132,
                           fit: BoxFit.contain,
-                          cacheWidth: 440,
-                          cacheHeight: 264,
+                          
                           errorBuilder: (_, __, ___) => Text(
                             'Maintix',
                             style: GoogleFonts.plusJakartaSans(
