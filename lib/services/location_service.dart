@@ -21,7 +21,7 @@ class LocationService {
 
   static const String _locationIqKey = String.fromEnvironment(
     'LOCATIONIQ_API_KEY',
-    defaultValue: '',
+    defaultValue: 'pk.9021ca0351eccb4c4a9ae57085c14964',
   );
 
   final Dio _dio = Dio(
