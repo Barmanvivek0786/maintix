@@ -83,8 +83,11 @@ class _BookingScreenState extends State<BookingScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
-      child: Scaffold(
+      value: Theme.of(context).brightness == Brightness.dark
+          ? SystemUiOverlayStyle.light
+          : SystemUiOverlayStyle.dark,
+      child: GpsEnforcementWrapper(
+        child: Scaffold(
         backgroundColor: AppTheme.background,
         appBar: _currentStep < 4
             ? AppBar(
