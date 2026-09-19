@@ -211,6 +211,11 @@ class SupabaseService {
   );
   static const String supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
+    // Supabase anon keys are public client credentials. Keep this verified
+    // project key as a safe first-run fallback; CI/local builds can override
+    // it with the workspace secret through tool/flutter_with_env.sh.
+    defaultValue:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1ZGx1Y21zanlqaWxranB2aXZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDgwMDQwMzksImV4cCI6MjEwMzU4MDAzOX0.nEoVQzbJYD8EF5fQ168KPheIeJRpZMRm02D2zynn86M',
   );
 
   static Future<void> initialize() async {

@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
-import '../../providers/app_state.dart';
-import '../../services/location_service.dart';
-import '../../theme/app_theme.dart';
+import '../providers/app_state.dart';
+import '../services/location_service.dart';
+import '../theme/app_theme.dart';
 
 /// Non-dismissible GPS enforcement overlay.
 /// Wraps any child and shows a blocking overlay when GPS is disabled.
