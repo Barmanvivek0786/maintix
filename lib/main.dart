@@ -221,13 +221,14 @@ class _MyAppState extends State<MyApp> {
   bool _initialized = false;
 
   @override
-  void initState() {
-    super.initState();
-    _appState = AppState();
-    _initAuthListener();
-    // Apply initial system UI overlay for light mode
-    AppTheme.applySystemUI(ThemeMode.light);
-  }
+void initState() {
+  super.initState();
+  _appState = AppState();
+  _appState.loadThemePreference();
+  _initAuthListener();
+  // Apply initial system UI overlay for light mode
+  AppTheme.applySystemUI(ThemeMode.light);
+}
 
   void _initAuthListener() {
     // Guard the listener so a transient plugin/auth initialization error does
