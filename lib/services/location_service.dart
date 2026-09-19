@@ -119,10 +119,10 @@ class LocationService {
         if (address != null) {
           // Area: road / neighbourhood / suburb
           final area =
-              address['road'] as String? ??
-              address['neighbourhood'] as String? ??
               address['suburb'] as String? ??
+              address['neighbourhood'] as String? ??
               address['quarter'] as String? ??
+              address['road'] as String? ??
               address['pedestrian'] as String?;
 
           // City: city / town / village / county
