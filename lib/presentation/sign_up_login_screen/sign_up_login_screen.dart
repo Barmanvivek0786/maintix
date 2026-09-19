@@ -180,15 +180,15 @@ class _SignUpLoginScreenState extends State<SignUpLoginScreen>
                 ),
                 // Form card
                 Container(
-                  width: double.infinity,
-                  constraints: const BoxConstraints(minHeight: 500),
-                  decoration: const BoxDecoration(
-                    color: AppTheme.background,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(32),
-                      topRight: Radius.circular(32),
-                    ),
-                  ),
+  width: double.infinity,
+  constraints: const BoxConstraints(minHeight: 500),
+  decoration: BoxDecoration(
+    color: Theme.of(context).scaffoldBackgroundColor,
+    borderRadius: BorderRadius.only(
+      topLeft: Radius.circular(32),
+      topRight: Radius.circular(32),
+    ),
+  ),
                   padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
                   child: Form(
                     key: _formKey,
