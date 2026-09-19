@@ -11,6 +11,7 @@ import './widgets/booking_step2_widget.dart';
 import './widgets/booking_step3_widget.dart';
 import './widgets/booking_step4_widget.dart';
 import './widgets/booking_step5_widget.dart';
+import '../../widgets/gps_enforcement_wrapper.dart';
 
 class BookingScreen extends StatefulWidget {
   const BookingScreen({super.key});
