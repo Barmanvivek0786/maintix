@@ -10,7 +10,7 @@ class RazorpayService {
   /// The secret is intentionally kept in the Supabase Edge Function.
   static const String keyId = String.fromEnvironment(
     'RAZORPAY_KEY_ID',
-    defaultValue: '',
+    defaultValue: 'rzp_test_TVv2X2c32eqwCg',
   );
 
   /// Step 1: Create a Razorpay order through the Supabase Edge Function.
