@@ -517,6 +517,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
           ),
         ),
       ),
+      ),
     );
   }
 }
@@ -769,8 +770,7 @@ class _ReviewSubmissionSheetState extends State<_ReviewSubmissionSheet> {
             // Extra bottom padding so submit button clears the floating tab bar
             SizedBox(height: MediaQuery.of(context).padding.bottom + 80),
           ],
-        ),
-      ),
+       ),
      ),
     );
   }
