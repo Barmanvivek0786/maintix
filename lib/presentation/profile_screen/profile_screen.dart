@@ -32,7 +32,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
+      value: Theme.of(context).brightness == Brightness.dark
+          ? SystemUiOverlayStyle.light
+          : SystemUiOverlayStyle.dark,
       child: Scaffold(
         backgroundColor: AppTheme.background,
         body: SafeArea(
