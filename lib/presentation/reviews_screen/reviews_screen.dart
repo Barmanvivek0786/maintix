@@ -7,6 +7,7 @@ import '../../theme/app_theme.dart';
 import '../../providers/app_state.dart';
 import './widgets/reviews_card_widget.dart';
 import './widgets/reviews_stats_widget.dart';
+import '../../widgets/gps_enforcement_wrapper.dart';
 
 class ReviewsScreen extends StatefulWidget {
   const ReviewsScreen({super.key});
@@ -770,6 +771,7 @@ class _ReviewSubmissionSheetState extends State<_ReviewSubmissionSheet> {
           ],
         ),
       ),
+     ),
     );
   }
 }
