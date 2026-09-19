@@ -302,8 +302,11 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
     final appState = context.watch<AppState>();
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
-      child: Scaffold(
+      value: Theme.of(context).brightness == Brightness.dark
+          ? SystemUiOverlayStyle.light
+          : SystemUiOverlayStyle.dark,
+      child: GpsEnforcementWrapper(
+        child: Scaffold(
         backgroundColor: AppTheme.background,
         body: SafeArea(
           bottom: false,
