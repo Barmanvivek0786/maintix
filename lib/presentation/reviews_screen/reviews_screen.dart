@@ -114,7 +114,9 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
 
     _selectedRating = 5;
     _commentController.clear();
-    _serviceController.text = 'Water Tank Cleaning';
+    _serviceController.text = appState.dbBookings.isNotEmpty
+        ? appState.dbBookings.first.serviceName
+        : 'Water Tank Cleaning';
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -348,8 +350,8 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              appState.avgRating > 0
-                                  ? appState.avgRating.toStringAsFixed(1)
+                             appState.publicAvgRating  > 0
+                                  ? appState.publicAvgRating.toStringAsFixed(1)
                                   : '5.0',
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 22,
@@ -462,7 +464,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                                 timeAgo: r.timeAgo,
                                 rating: r.rating,
                                 review: r.review,
-                                tag: 'Verified Customer',
+                                tag: r.serviceName.isNotEmpty ? r.serviceName : 'Tank Cleaning',
                                 avatarColor: Color(r.avatarColorValue),
                                 initials: r.initials,
                                 photoUrl: r.photoUrl,
@@ -604,6 +606,7 @@ class _ReviewSubmissionSheetState extends State<_ReviewSubmissionSheet> {
             const SizedBox(height: 6),
             TextField(
               controller: widget.serviceController,
+              readOnly: true,
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
                 color: AppTheme.inputTextColor(context),
