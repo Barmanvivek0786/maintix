@@ -524,7 +524,23 @@ Future<void> sendOtp(String email) async {
       return [];
     }
   }
-
+  Future<List<ReviewRecord>> fetchMyReviews() async {
+    final user = currentUser;
+    if (user == null) return [];
+    try {
+      final data = await client
+          .from('reviews')
+          .select()
+          .eq('user_id', user.id)
+          .order('created_at', ascending: false);
+      return (data as List)
+          .map((item) => ReviewRecord.fromJson(item as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      debugPrint('fetchMyReviews error: $e');
+      return [];
+    }
+  }
   Future<ReviewRecord?> createReview({
     required String serviceName,
     required double rating,
