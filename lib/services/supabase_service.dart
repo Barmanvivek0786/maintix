@@ -501,21 +501,20 @@ Future<void> sendOtp(String email) async {
 
   // ─── REVIEWS ─────────────────────────────────────────────────────────────
 
-  Future<List<ReviewRecord>> fetchReviews() async {
+  Future<List<ReviewRecord>> fetchMyReviews() async {
+    final user = currentUser;
+    if (user == null) return [];
     try {
-      // Approved reviews are intentionally public. Do not scope this query
-      // to currentUser: the Reviews tab must work for signed-out visitors too.
       final data = await client
           .from('reviews')
           .select()
-          .eq('is_approved', true)
+          .eq('user_id', user.id)
           .order('created_at', ascending: false);
-
       return (data as List)
           .map((item) => ReviewRecord.fromJson(item as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      debugPrint('fetchReviews error: $e');
+      debugPrint('fetchMyReviews error: $e');
       return [];
     }
   }
@@ -524,6 +523,7 @@ Future<void> sendOtp(String email) async {
     required String serviceName,
     required double rating,
     required String reviewText,
+    String userName = '',
   }) async {
     final user = currentUser;
     if (user == null) return null;
@@ -533,9 +533,11 @@ Future<void> sendOtp(String email) async {
           .from('reviews')
           .insert({
             'user_id': user.id,
+            'user_name': userName,
             'service_name': serviceName,
             'rating': rating,
             'review_text': reviewText,
+            'is_approved': false,
           })
           .select()
           .maybeSingle();
@@ -748,12 +750,12 @@ Future<void> sendOtp(String email) async {
     required double latitude,
     required double longitude,
     required String address,
+    bool updateProfileLocation = true,
   }) async {
     final user = currentUser;
     if (user == null) return;
 
     try {
-      // Insert new location record
       await client.from('user_locations').insert({
         'user_id': user.id,
         'latitude': latitude,
@@ -761,14 +763,15 @@ Future<void> sendOtp(String email) async {
         'address': address,
       });
 
-      // Also update profiles.location field
-      await client
-          .from('profiles')
-          .update({
-            'location': address,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', user.id);
+      if (updateProfileLocation) {
+        await client
+            .from('profiles')
+            .update({
+              'location': address,
+              'updated_at': DateTime.now().toIso8601String(),
+            })
+            .eq('id', user.id);
+      }
     } catch (e) {
       debugPrint('logUserLocation error: $e');
     }
