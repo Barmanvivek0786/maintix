@@ -24,6 +24,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _phoneController;
   late TextEditingController _cityController;
   bool _isSaving = false;
+  bool _cityTouched = false;
 
   XFile? _pickedImageFile;
 
@@ -33,7 +34,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final appState = context.read<AppState>();
     _nameController = TextEditingController(text: appState.userName);
     _phoneController = TextEditingController(text: appState.userPhone);
-    _cityController = TextEditingController(text: appState.userCity);
+    _cityController = TextEditingController(text: appState.suggestedCity);
   }
 
   @override
@@ -266,7 +267,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
-
+        if (!_cityTouched &&
+        _cityController.text.isEmpty &&
+        appState.suggestedCity.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_cityTouched && _cityController.text.isEmpty) {
+          _cityController.text = appState.suggestedCity;
+        }
+      });
+        }
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
@@ -414,6 +423,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _cityController,
+                    onChanged: (_) => _cityTouched = true,
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 15,
                       color: AppTheme.inputTextColor(context),
