@@ -507,20 +507,20 @@ Future<void> sendOtp(String email) async {
 
   // ─── REVIEWS ─────────────────────────────────────────────────────────────
 
-  Future<List<ReviewRecord>> fetchMyReviews() async {
-    final user = currentUser;
-    if (user == null) return [];
+  Future<List<ReviewRecord>> fetchReviews() async {
     try {
+      // Sirf approved reviews public hain
       final data = await client
           .from('reviews')
           .select()
-          .eq('user_id', user.id)
+          .eq('is_approved', true)
           .order('created_at', ascending: false);
+
       return (data as List)
           .map((item) => ReviewRecord.fromJson(item as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      debugPrint('fetchMyReviews error: $e');
+      debugPrint('fetchReviews error: $e');
       return [];
     }
   }
