@@ -381,7 +381,9 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
 
   Widget _buildOtpScreen() {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
+      value: Theme.of(context).brightness == Brightness.dark
+          ? SystemUiOverlayStyle.light
+          : SystemUiOverlayStyle.dark,
       child: Scaffold(
         backgroundColor: AppTheme.primaryNavy,
         body: SafeArea(
