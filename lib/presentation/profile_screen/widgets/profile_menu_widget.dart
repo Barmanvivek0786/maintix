@@ -359,7 +359,7 @@ class ProfileMenuWidget extends StatelessWidget {
   }
 
   void _showMyReviewsDialog(BuildContext context) {
-    final reviews = context.read<AppState>().userReviews;
+    final reviews = context.read<AppState>().myReviews;
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.surfaceWhite,
@@ -506,7 +506,7 @@ class ProfileMenuWidget extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                r.timeAgo,
+                                '${r.timeAgo}  •  ${r.isApproved ? "✅ Live" : "⏳ Approval pending"}',
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 11,
                                   color: AppTheme.textMuted,
