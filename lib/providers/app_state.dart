@@ -42,6 +42,7 @@ class ReviewModel {
   final String timeAgo;
   final String? photoUrl;
   final String serviceName;
+  final bool isApproved;
 
   ReviewModel({
     this.id,
@@ -54,6 +55,7 @@ class ReviewModel {
     this.timeAgo = 'Just now',
     this.photoUrl,
     this.serviceName = 'Water Tank Cleaning',
+    this.isApproved = true,
   });
 }
 
@@ -150,6 +152,10 @@ class AppState extends ChangeNotifier {
   // ─── Reviews (Supabase-backed) ────────────────────────────────────────────
   List<ReviewModel> _userReviews = [];
   List<ReviewModel> get userReviews => List.unmodifiable(_userReviews);
+  List<ReviewModel> _myReviews = [];
+  List<ReviewModel> get myReviews => List.unmodifiable(_myReviews);
+  double _publicAvgRating = 0.0;
+  double get publicAvgRating => _publicAvgRating;
   bool _reviewsLoading = false;
   bool get reviewsLoading => _reviewsLoading;
 
@@ -240,6 +246,7 @@ class AppState extends ChangeNotifier {
 
   String _userCity = '';
   String get userCity => _userCity;
+  String get suggestedCity => _userCity.isNotEmpty ? _userCity : _liveLocation;
 
   String? _avatarUrl;
   String? get avatarUrl => _avatarUrl;
@@ -571,6 +578,7 @@ class AppState extends ChangeNotifier {
     _dbBookings = [];
     _bookingHistory.clear();
     _userReviews = [];
+    _myReviews = [];
     _coinBalance = 0;
     _totalBookingsCount = 0;
     _avgRating = 0.0;
@@ -619,6 +627,15 @@ class AppState extends ChangeNotifier {
       _userPhone = updated.phoneNumber;
       _userCity = updated.location;
       if (updated.avatarUrl != null) _avatarUrl = updated.avatarUrl;
+
+      // User ne city khud badli ho to GPS use overwrite na kare
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final isManual =
+            city.trim().isNotEmpty && city.trim() != _liveLocation.trim();
+        await prefs.setBool('city_manual_${currentUserId ?? ''}', isManual);
+      } catch (_) {}
+
       notifyListeners();
       return true;
     }
@@ -673,39 +690,58 @@ class AppState extends ChangeNotifier {
     _reviewsLoading = true;
     notifyListeners();
 
-    final records = await SupabaseService.instance.fetchReviews();
-    _userReviews = records.map((r) {
-      final initials = _userName
-          .split(' ')
-          .map((w) => w.isNotEmpty ? w[0] : '')
-          .take(2)
-          .join()
-          .toUpperCase();
-      return ReviewModel(
-        id: r.id,
-        userId: r.userId,
-        name: r.userId == currentUserId && _userName.isNotEmpty
-            ? _userName
-            : 'Verified Customer',
-        initials: r.userId == currentUserId && initials.isNotEmpty
-            ? initials
-            : 'VC',
-        avatarColorValue: 0xFF0D9488,
-        rating: r.rating.round(),
-        review: r.reviewText,
-        serviceName: r.serviceName,
-        timeAgo: _timeAgo(r.createdAt),
-        photoUrl: effectiveProfileImageUrl,
-      );
-    }).toList();
+    final publicRecords = await SupabaseService.instance.fetchReviews();
+    final myRecords = await SupabaseService.instance.fetchMyReviews();
+
+    _userReviews = publicRecords.map(_toReviewModel).toList();
+    _myReviews = myRecords.map(_toReviewModel).toList();
 
     if (_userReviews.isNotEmpty) {
       final total = _userReviews.fold<double>(0, (sum, r) => sum + r.rating);
-      _avgRating = total / _userReviews.length;
+      _publicAvgRating = total / _userReviews.length;
+    } else {
+      _publicAvgRating = 0.0;
     }
 
     _reviewsLoading = false;
     notifyListeners();
+  }
+
+  ReviewModel _toReviewModel(ReviewRecord r) {
+    final isMine = r.userId == currentUserId;
+    String displayName = r.userName.trim();
+    if (displayName.isEmpty) {
+      displayName = (isMine && _userName.isNotEmpty) ? _userName : 'Customer';
+    }
+    final initials = displayName
+        .split(' ')
+        .where((w) => w.isNotEmpty)
+        .map((w) => w[0])
+        .take(2)
+        .join()
+        .toUpperCase();
+    const colors = <int>[
+      0xFF3B82F6,
+      0xFF10B981,
+      0xFFEC4899,
+      0xFFF59E0B,
+      0xFF8B5CF6,
+      0xFF06B6D4,
+      0xFF0D9488,
+    ];
+    return ReviewModel(
+      id: r.id,
+      userId: r.userId,
+      name: displayName,
+      initials: initials.isEmpty ? 'C' : initials,
+      avatarColorValue: colors[displayName.codeUnitAt(0) % colors.length],
+      rating: r.rating.round(),
+      review: r.reviewText,
+      serviceName: r.serviceName,
+      timeAgo: _timeAgo(r.createdAt),
+      photoUrl: isMine ? effectiveProfileImageUrl : null,
+      isApproved: r.isApproved,
+    );
   }
 
   Future<bool> submitDbReview({
@@ -717,6 +753,7 @@ class AppState extends ChangeNotifier {
       serviceName: serviceName,
       rating: rating,
       reviewText: reviewText,
+      userName: _userName,
     );
 
     if (record != null) {
@@ -754,9 +791,10 @@ class AppState extends ChangeNotifier {
     final success = await SupabaseService.instance.deleteReview(reviewId);
     if (success) {
       _userReviews.removeWhere((r) => r.id == reviewId);
-      if (_userReviews.isNotEmpty) {
-        final total = _userReviews.fold<double>(0, (sum, r) => sum + r.rating);
-        _avgRating = total / _userReviews.length;
+      _myReviews.removeWhere((r) => r.id == reviewId);
+      if (_myReviews.isNotEmpty) {
+        final total = _myReviews.fold<double>(0, (sum, r) => sum + r.rating);
+        _avgRating = total / _myReviews.length;
       } else {
         _avgRating = 0.0;
       }
@@ -974,11 +1012,21 @@ class AppState extends ChangeNotifier {
       _locationPermissionDenied = false;
 
       // Save to Supabase
+      // Agar user ne city khud edit ki hai to GPS use overwrite na kare
+      final prefs = await SharedPreferences.getInstance();
+      final isManual =
+          prefs.getBool('city_manual_${currentUserId ?? ''}') ?? false;
+      final autoFill = !isManual || _userCity.trim().isEmpty;
+
       await SupabaseService.instance.logUserLocation(
         latitude: result.latitude,
         longitude: result.longitude,
         address: result.address,
+        updateProfileLocation: autoFill,
       );
+      if (autoFill) {
+        _userCity = result.address;
+      }
     } catch (e) {
       debugPrint('fetchAndSaveLocation error: $e');
       _locationPermissionDenied = true;
