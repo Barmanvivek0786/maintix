@@ -108,17 +108,21 @@ class BookingRecord {
 class ReviewRecord {
   final String id;
   final String userId;
+  final String userName;
   final String serviceName;
   final double rating;
   final String reviewText;
+  final bool isApproved;
   final DateTime createdAt;
 
   ReviewRecord({
     required this.id,
     required this.userId,
+    this.userName = '',
     required this.serviceName,
     required this.rating,
     required this.reviewText,
+    this.isApproved = false,
     required this.createdAt,
   });
 
@@ -126,9 +130,11 @@ class ReviewRecord {
     return ReviewRecord(
       id: json['id'] as String,
       userId: json['user_id'] as String,
+      userName: json['user_name'] as String? ?? '',
       serviceName: json['service_name'] as String? ?? '',
       rating: (json['rating'] as num?)?.toDouble() ?? 5.0,
       reviewText: json['review_text'] as String? ?? '',
+      isApproved: json['is_approved'] as bool? ?? false,
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'] as String) ?? DateTime.now()
           : DateTime.now(),
