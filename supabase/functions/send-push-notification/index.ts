@@ -70,6 +70,14 @@ Deno.serve(async (request) => {
       return json({ skipped: true, reason: "empty body" });
     }
 
+    // Admin broadcasts insert one `admin_broadcasts` row (pushed to every
+    // subscribed device below) plus one in-app `notifications` row per user
+    // (type = 'broadcast'). Those per-user rows are only for the in-app list,
+    // so skip them here or every user would get the same push twice.
+    if (payload.table === "notifications" && record.type === "broadcast") {
+      return json({ skipped: true, reason: "broadcast fan-out row" });
+    }
+
     const notificationPayload: Record<string, unknown> = {
       app_id: oneSignalAppId,
       headings: { en: title },
