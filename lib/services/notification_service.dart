@@ -78,13 +78,16 @@ class NotificationService {
   }
 
   /// Inserts the notification row, which fans out to a real OneSignal push
-  /// via the Edge Function webhook. Use this instead of the old
-  /// triggerNotification (there is no local "show" step anymore).
+  /// via the Edge Function webhook (there is no local "show" step anymore).
+  ///
+  /// [localId] is accepted only so existing callers keep compiling; it is
+  /// ignored because push delivery is handled by OneSignal.
   Future<void> triggerNotification({
     required String userId,
     required String title,
     required String body,
     String type = 'general',
+    int localId = 0,
   }) async {
     await saveNotification(userId: userId, title: title, body: body, type: type);
   }
