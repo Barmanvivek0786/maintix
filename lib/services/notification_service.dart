@@ -1,7 +1,17 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// Notifications are now delivered as real OS push notifications by
+/// OneSignal (backed by Firebase FCM on Android / APNs on iOS) — triggered
+/// server-side by a Supabase Edge Function whenever a row is inserted into
+/// `notifications` or `admin_broadcasts`. See supabase/functions/send-push-notification.
+///
+/// This service is now only responsible for:
+///  - the in-app notification list (fetch / mark read / delete)
+///  - keeping the in-app unread badge in sync in real time while the app is
+///    open, via Supabase Realtime (it does NOT show a local notification —
+///    OneSignal already delivers the actual system push, so doing both would
+///    show the same notification twice).
 class NotificationModel {
   final String id;
   final String userId;
@@ -42,137 +52,12 @@ class NotificationService {
       _instance ??= NotificationService._();
   NotificationService._();
 
-  final FlutterLocalNotificationsPlugin _plugin =
-      FlutterLocalNotificationsPlugin();
-  bool _initialized = false;
   RealtimeChannel? _channel;
   RealtimeChannel? _broadcastChannel;
 
   SupabaseClient get _client => Supabase.instance.client;
 
-  // ─── Initialize ──────────────────────────────────────────────────────────
-
-  Future<void> initialize() async {
-    if (_initialized) return;
-    if (kIsWeb) {
-      _initialized = true;
-      return;
-    }
-
-    const androidSettings = AndroidInitializationSettings(
-      '@mipmap/ic_launcher',
-    );
-    const iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
-    const initSettings = InitializationSettings(
-      android: androidSettings,
-      iOS: iosSettings,
-    );
-
-    await _plugin.initialize(
-      settings: initSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse response) {
-        debugPrint('Notification tapped: ${response.payload}');
-      },
-    );
-
-    // Create the Android notification channel with high importance for heads-up display
-    final androidPlugin = _plugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >();
-    if (androidPlugin != null) {
-      const channel = AndroidNotificationChannel(
-        'maintix_channel',
-        'Maintix Notifications',
-        description: 'Maintix app notifications',
-        importance: Importance.max,
-        playSound: true,
-        enableVibration: true,
-        showBadge: true,
-      );
-      await androidPlugin.createNotificationChannel(channel);
-    }
-
-    _initialized = true;
-  }
-
-  Future<bool> requestPermission() async {
-    if (kIsWeb) return false;
-    try {
-      final androidPlugin = _plugin
-          .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >();
-      if (androidPlugin != null) {
-        final granted = await androidPlugin.requestNotificationsPermission();
-        return granted ?? false;
-      }
-      final iosPlugin = _plugin
-          .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin
-          >();
-      if (iosPlugin != null) {
-        final granted = await iosPlugin.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
-        return granted ?? false;
-      }
-    } catch (e) {
-      debugPrint('requestPermission error: $e');
-    }
-    return false;
-  }
-
-  // ─── Show local notification ──────────────────────────────────────────────
-
-  Future<void> showNotification({
-    required String title,
-    required String body,
-    int id = 0,
-  }) async {
-    if (kIsWeb || !_initialized) return;
-    try {
-      final androidDetails = AndroidNotificationDetails(
-        'maintix_channel',
-        'Maintix Notifications',
-        channelDescription: 'Maintix app notifications',
-        importance: Importance.max,
-        priority: Priority.max,
-        playSound: true,
-        enableVibration: true,
-        ticker: 'ticker',
-        fullScreenIntent: false,
-        visibility: NotificationVisibility.public,
-        styleInformation: BigTextStyleInformation(body),
-      );
-      const iosDetails = DarwinNotificationDetails(
-        presentAlert: true,
-        presentBadge: true,
-        presentSound: true,
-        interruptionLevel: InterruptionLevel.active,
-      );
-      final details = NotificationDetails(
-        android: androidDetails,
-        iOS: iosDetails,
-      );
-      await _plugin.show(
-        id: id,
-        title: title,
-        body: body,
-        notificationDetails: details,
-      );
-    } catch (e) {
-      debugPrint('showNotification error: $e');
-    }
-  }
-
-  // ─── Save to Supabase ─────────────────────────────────────────────────────
+  // ─── Save to Supabase (triggers the push via DB webhook -> Edge Function) ─
 
   Future<void> saveNotification({
     required String userId,
@@ -192,19 +77,16 @@ class NotificationService {
     }
   }
 
-  // ─── Trigger notification (show + save) ──────────────────────────────────
-
+  /// Inserts the notification row, which fans out to a real OneSignal push
+  /// via the Edge Function webhook. Use this instead of the old
+  /// triggerNotification (there is no local "show" step anymore).
   Future<void> triggerNotification({
     required String userId,
     required String title,
     required String body,
     String type = 'general',
-    int localId = 0,
   }) async {
-    await Future.wait([
-      showNotification(title: title, body: body, id: localId),
-      saveNotification(userId: userId, title: title, body: body, type: type),
-    ]);
+    await saveNotification(userId: userId, title: title, body: body, type: type);
   }
 
   // ─── Fetch notifications ──────────────────────────────────────────────────
@@ -245,7 +127,7 @@ class NotificationService {
     }
   }
 
-  // ─── Real-time subscription ───────────────────────────────────────────────
+  // ─── Real-time subscription (in-app badge/list sync only — no local popup)
 
   void subscribeToUserNotifications(
     String userId,
@@ -267,12 +149,6 @@ class NotificationService {
             try {
               final model = NotificationModel.fromJson(payload.newRecord);
               onNew(model);
-              // Show system status bar notification immediately
-              showNotification(
-                title: model.title,
-                body: model.body,
-                id: DateTime.now().millisecondsSinceEpoch % 100000,
-              );
             } catch (e) {
               debugPrint('realtime notification parse error: $e');
             }
@@ -281,8 +157,8 @@ class NotificationService {
         .subscribe();
   }
 
-  /// Subscribe to admin_broadcasts table — triggers a system push notification
-  /// for every new broadcast row inserted (visible to all users).
+  /// Subscribe to admin_broadcasts table for in-app badge/list sync. The
+  /// actual push to all users' devices is sent by the Edge Function.
   void subscribeToAdminBroadcasts(
     void Function(String title, String body) onBroadcast,
   ) {
@@ -298,11 +174,6 @@ class NotificationService {
               final title = payload.newRecord['title'] as String? ?? 'Maintix';
               final body = payload.newRecord['body'] as String? ?? '';
               onBroadcast(title, body);
-              showNotification(
-                title: title,
-                body: body,
-                id: DateTime.now().millisecondsSinceEpoch % 100000,
-              );
             } catch (e) {
               debugPrint('realtime broadcast parse error: $e');
             }
@@ -326,7 +197,8 @@ class NotificationService {
     required String sentBy,
   }) async {
     try {
-      // Save broadcast record
+      // Save broadcast record — the DB webhook fans this out as a real push
+      // to every subscribed device via the Edge Function.
       await _client.from('admin_broadcasts').insert({
         'title': title,
         'body': body,
@@ -337,7 +209,8 @@ class NotificationService {
       final profiles = await _client.from('profiles').select('id');
       final userIds = (profiles as List).map((p) => p['id'] as String).toList();
 
-      // Insert notification for each user
+      // Insert an in-app notification row for each user too, so it shows
+      // up in their in-app notification list/history.
       if (userIds.isNotEmpty) {
         final notifications = userIds
             .map(
