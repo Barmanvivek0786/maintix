@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "910069855667",
+    "project_id": "maintix-313e5",
+    "storage_bucket": "maintix-313e5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:910069855667:android:64bc09078969c6edca07c6",
+        "android_client_info": {
+          "package_name": "com.maintix.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDT7q50I7XCUryDjbuBV87PJrGbHawn3zo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
