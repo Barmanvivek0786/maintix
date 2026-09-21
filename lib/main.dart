@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -12,6 +13,12 @@ import './services/notification_service.dart';
 import './services/supabase_service.dart';
 import './widgets/custom_error_widget.dart';
 import 'core/app_export.dart';
+
+/// OneSignal App ID — from OneSignal dashboard (Settings > Keys & IDs) for
+/// the "Maintix App". Safe to keep in source; it is a public identifier,
+/// not a secret (unlike the REST API key, which only ever lives server-side
+/// in the Supabase Edge Function).
+const String _oneSignalAppId = 'a791ea02-af27-4af4-9a9e-a8c062f960eb';
 
 void main() {
   // CRITICAL: Must be the very first call before any async work or plugin use.
@@ -49,12 +56,14 @@ void main() {
         debugPrint('Supabase init error: $e\n$stack');
       }
 
-      // Initialize notification service
+      // Initialize OneSignal push notifications (real push — works even
+      // when the app is closed or killed, unlike the old local-only setup).
       try {
-        await NotificationService.instance.initialize();
-        await NotificationService.instance.requestPermission();
+        OneSignal.Debug.setLogLevel(OSLogLevel.error);
+        OneSignal.initialize(_oneSignalAppId);
+        await OneSignal.Notifications.requestPermission(true);
       } catch (e) {
-        debugPrint('NotificationService init error (non-fatal): $e');
+        debugPrint('OneSignal init error (non-fatal): $e');
       }
 
       // 🚨 CRITICAL: Device orientation lock - DO NOT REMOVE
@@ -245,6 +254,7 @@ void initState() {
               if (!_appState.isLoggedIn) {
                 await _appState.loginWithSupabase();
               }
+              _linkOneSignalIdentity(session.user.id);
               _subscribeToNotifications(session.user.id);
               if (_initialized &&
                   appRouter.routerDelegate.currentConfiguration.uri
@@ -263,6 +273,7 @@ void initState() {
               }
             } else if (event == AuthChangeEvent.signedOut) {
               NotificationService.instance.unsubscribe();
+              OneSignal.logout();
               _appState.logout();
               final currentPath = appRouter
                   .routerDelegate
@@ -276,19 +287,34 @@ void initState() {
               if (session != null && !_appState.isLoggedIn) {
                 await _appState.loginWithSupabase();
               }
-              if (session != null) _subscribeToNotifications(session.user.id);
+              if (session != null) {
+                _linkOneSignalIdentity(session.user.id);
+                _subscribeToNotifications(session.user.id);
+              }
               _initialized = true;
             } else if (event == AuthChangeEvent.tokenRefreshed &&
                 session != null) {
               if (!_appState.isLoggedIn) {
                 await _appState.loginWithSupabase();
               }
+              _linkOneSignalIdentity(session.user.id);
               _subscribeToNotifications(session.user.id);
             }
           });
     } catch (e) {
       debugPrint('Auth listener init error (Supabase not ready): $e');
       _initialized = true;
+    }
+  }
+
+  /// Associates this device's OneSignal subscription with the signed-in
+  /// Supabase user (external_id). The Edge Function targets pushes using
+  /// this same ID, so no player-id syncing table is needed.
+  void _linkOneSignalIdentity(String userId) {
+    try {
+      OneSignal.login(userId);
+    } catch (e) {
+      debugPrint('OneSignal login error (non-fatal): $e');
     }
   }
 
