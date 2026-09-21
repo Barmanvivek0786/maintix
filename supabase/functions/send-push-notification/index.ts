@@ -1,14 +1,14 @@
-// Triggered by a Supabase Database Webhook (DB trigger) on INSERT into
-// `notifications` and `admin_broadcasts`. Sends a real OS push notification
-// via OneSignal (delivered through Firebase FCM on Android / APNs on iOS), so
-// users get notified even when the app is closed or killed.
+// Triggered by a Supabase DB trigger on INSERT into `notifications` and
+// `admin_broadcasts`. Sends a real OS push notification via OneSignal
+// (delivered through Firebase FCM on Android / APNs on iOS), so users get
+// notified even when the app is closed or killed.
 //
 // Required Edge Function secrets (set via `supabase secrets set`):
 //   ONESIGNAL_APP_ID          - Maintix App's OneSignal App ID
 //   ONESIGNAL_REST_API_KEY    - Maintix App's OneSignal REST API Key (secret)
-//   PUSH_WEBHOOK_SECRET       - shared secret; must match the custom header
-//                               configured on the DB trigger, so this
-//                               public endpoint can't be spammed by outsiders.
+//   PUSH_WEBHOOK_SECRET       - shared secret; must match the header sent by
+//                               the DB trigger, so this public endpoint can't
+//                               be spammed by outsiders.
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -84,6 +84,13 @@ Deno.serve(async (request) => {
     // so skip them here or every user would get the same push twice.
     if (payload.table === "notifications" && recordType === "broadcast") {
       return json({ skipped: true, reason: "broadcast fan-out row" });
+    }
+
+    // Broadcasts imported from the OneSignal dashboard were already pushed by
+    // OneSignal itself; they are stored only so every user sees them in the
+    // in-app list. Never push them a second time.
+    if (payload.table === "admin_broadcasts" && record.onesignal_id) {
+      return json({ skipped: true, reason: "already pushed by OneSignal" });
     }
 
     const notificationPayload: Record<string, unknown> = {

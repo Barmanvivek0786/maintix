@@ -64,8 +64,10 @@ class HomeHeaderWidget extends StatelessWidget {
                         width: 72,
                         height: 72,
                         fit: BoxFit.cover,
-                        cacheWidth: 144,
-                        cacheHeight: 144,
+                        // Full-resolution decode + high quality scaling so the
+                        // logo stays sharp on high-density (FHD+) screens.
+                        filterQuality: FilterQuality.high,
+                        isAntiAlias: true,
                         errorBuilder: (_, __, ___) => Container(
                           width: 72,
                           height: 72,

@@ -138,8 +138,10 @@ class _SignUpLoginScreenState extends State<SignUpLoginScreen>
                                 width: 160,
                                 height: 160,
                                 fit: BoxFit.cover,
-                                cacheWidth: 320,
-                                cacheHeight: 320,
+                                // Full-resolution decode + high quality scaling so the
+                                // logo stays sharp on high-density (FHD+) screens.
+                                filterQuality: FilterQuality.high,
+                                isAntiAlias: true,
                                 errorBuilder: (_, __, ___) => Center(
                                   child: Text(
                                     'M',
