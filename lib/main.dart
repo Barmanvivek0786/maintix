@@ -230,14 +230,14 @@ class _MyAppState extends State<MyApp> {
   bool _initialized = false;
 
   @override
-void initState() {
-  super.initState();
-  _appState = AppState();
-  _appState.loadThemePreference();
-  _initAuthListener();
-  // Apply initial system UI overlay for light mode
-  AppTheme.applySystemUI(ThemeMode.light);
-}
+  void initState() {
+    super.initState();
+    _appState = AppState();
+    _appState.loadThemePreference();
+    _initAuthListener();
+    // Apply initial system UI overlay for light mode
+    AppTheme.applySystemUI(ThemeMode.light);
+  }
 
   void _initAuthListener() {
     // Guard the listener so a transient plugin/auth initialization error does
@@ -251,10 +251,12 @@ void initState() {
             debugPrint('Auth event: $event');
 
             if (event == AuthChangeEvent.signedIn && session != null) {
+              // Link this device to the user BEFORE login runs, so the welcome /
+              // bonus pushes created during first-time setup can reach it.
+              _linkOneSignalIdentity(session.user.id);
               if (!_appState.isLoggedIn) {
                 await _appState.loginWithSupabase();
               }
-              _linkOneSignalIdentity(session.user.id);
               _subscribeToNotifications(session.user.id);
               if (_initialized &&
                   appRouter.routerDelegate.currentConfiguration.uri
@@ -284,20 +286,22 @@ void initState() {
                 appRouter.go(AppRoutes.signUpLoginScreen);
               }
             } else if (event == AuthChangeEvent.initialSession) {
+              if (session != null) {
+                _linkOneSignalIdentity(session.user.id);
+              }
               if (session != null && !_appState.isLoggedIn) {
                 await _appState.loginWithSupabase();
               }
               if (session != null) {
-                _linkOneSignalIdentity(session.user.id);
                 _subscribeToNotifications(session.user.id);
               }
               _initialized = true;
             } else if (event == AuthChangeEvent.tokenRefreshed &&
                 session != null) {
+              _linkOneSignalIdentity(session.user.id);
               if (!_appState.isLoggedIn) {
                 await _appState.loginWithSupabase();
               }
-              _linkOneSignalIdentity(session.user.id);
               _subscribeToNotifications(session.user.id);
             }
           });
