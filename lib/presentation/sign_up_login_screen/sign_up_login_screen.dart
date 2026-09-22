@@ -102,6 +102,14 @@ class _SignUpLoginScreenState extends State<SignUpLoginScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Theme-aware colors: the card background switches between white (light)
+    // and dark navy (dark mode), so its text/icon colors must follow suit or
+    // they blend into the background and become unreadable.
+    final cardTextColor = AppTheme.inputTextColor(context);
+    final cardSecondaryColor = isDark ? const Color(0xFF9EAAB8) : AppTheme.textSecondary;
+    final cardMutedColor = isDark ? const Color(0xFF9EAAB8) : AppTheme.textMuted;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
@@ -124,22 +132,26 @@ class _SignUpLoginScreenState extends State<SignUpLoginScreen>
                             width: 160,
                             height: 160,
                             decoration: BoxDecoration(
-                              color: Colors.white.withAlpha(26),
-                              borderRadius: BorderRadius.circular(30),
+                              color: Colors.white,
+                              shape: BoxShape.circle,
                               border: Border.all(
-                                color: AppTheme.tealAccent.withAlpha(102),
+                                color: AppTheme.tealAccent.withAlpha(140),
                                 width: 2,
                               ),
                             ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(28),
+                            // The logo artwork is itself a circular mark on a
+                            // white disc — clip it to a circle (not a rounded
+                            // square) so its edge lines up with the frame
+                            // around it instead of leaving mismatched corners.
+                            child: ClipOval(
                               child: Image.asset(
                                 'assets/images/maintix_full_logo.png',
                                 width: 160,
                                 height: 160,
                                 fit: BoxFit.cover,
-                                // Full-resolution decode + high quality scaling so the
-                                // logo stays sharp on high-density (FHD+) screens.
+                                // Full-resolution decode + high quality scaling
+                                // so the logo stays sharp on high-density (FHD+)
+                                // screens.
                                 filterQuality: FilterQuality.high,
                                 isAntiAlias: true,
                                 errorBuilder: (_, __, ___) => Center(
@@ -202,7 +214,7 @@ class _SignUpLoginScreenState extends State<SignUpLoginScreen>
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 22,
                             fontWeight: FontWeight.w700,
-                            color: AppTheme.inputTextColor(context),
+                            color: cardTextColor,
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -210,7 +222,7 @@ class _SignUpLoginScreenState extends State<SignUpLoginScreen>
                           'Enter your email address to receive a one-time password',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 14,
-                            color: AppTheme.textSecondary,
+                            color: cardSecondaryColor,
                           ),
                         ),
                         const SizedBox(height: 28),
@@ -218,10 +230,10 @@ class _SignUpLoginScreenState extends State<SignUpLoginScreen>
                         Container(
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
-                            color: AppTheme.tealAccent.withAlpha(20),
+                            color: AppTheme.tealAccent.withAlpha(isDark ? 40 : 20),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: AppTheme.tealAccent.withAlpha(64),
+                              color: AppTheme.tealAccent.withAlpha(90),
                             ),
                           ),
                           child: Row(
@@ -237,7 +249,7 @@ class _SignUpLoginScreenState extends State<SignUpLoginScreen>
                                   'A 6-digit OTP will be sent to your email. No password needed!',
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 13,
-                                    color: AppTheme.textPrimary,
+                                    color: cardTextColor,
                                   ),
                                 ),
                               ),
@@ -250,7 +262,7 @@ class _SignUpLoginScreenState extends State<SignUpLoginScreen>
                           keyboardType: TextInputType.emailAddress,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 15,
-                            color: AppTheme.inputTextColor(context),
+                            color: cardTextColor,
                           ),
                           decoration: InputDecoration(
                             labelText: 'Email Address',
@@ -339,7 +351,7 @@ class _SignUpLoginScreenState extends State<SignUpLoginScreen>
                             'By continuing, you agree to our Terms of Service\nand Privacy Policy.',
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 12,
-                              color: AppTheme.textMuted,
+                              color: cardMutedColor,
                               height: 1.6,
                             ),
                             textAlign: TextAlign.center,

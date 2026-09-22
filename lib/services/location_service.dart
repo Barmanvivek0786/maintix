@@ -78,23 +78,32 @@ class LocationService {
     await Geolocator.openAppSettings();
   }
 
-  /// Get current GPS position.
+  /// Get current GPS position. Uses `LocationAccuracy.best` (GPS-chip-grade,
+  /// same tier apps like Zomato/Swiggy use for the door-step pin) and a
+  /// slightly longer time budget so the fix has a chance to settle indoors.
   Future<Position?> getCurrentPosition() async {
     try {
       return await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 15),
+          accuracy: LocationAccuracy.best,
+          timeLimit: Duration(seconds: 20),
         ),
       );
     } catch (e) {
       debugPrint('getCurrentPosition error: $e');
-      return null;
+      // Fall back to the last known fix rather than nothing — still far more
+      // precise than a city-level address.
+      try {
+        return await Geolocator.getLastKnownPosition();
+      } catch (_) {
+        return null;
+      }
     }
   }
 
-  /// Reverse geocode using LocationIQ API.
-  /// Format: "{Area}, {City}, {State}"
+  /// Reverse geocode using LocationIQ API, at building/door-step precision
+  /// (zoom=18) — the same level of detail apps like Zomato/Swiggy show.
+  /// Format: "{House no/Building}, {Road}, {Area}, {City}"
   Future<String> reverseGeocodeLocationIQ(double lat, double lon) async {
     if (_locationIqKey.isEmpty) {
       return '${lat.toStringAsFixed(5)}, ${lon.toStringAsFixed(5)}';
@@ -108,6 +117,10 @@ class LocationService {
           'lat': lat.toString(),
           'lon': lon.toString(),
           'format': 'json',
+          'addressdetails': 1,
+          // zoom=18 = building level (max detail LocationIQ/Nominatim support),
+          // vs the previous default (~city level).
+          'zoom': 18,
         },
         options: Options(headers: {'Accept': 'application/json'}),
       );
@@ -117,38 +130,60 @@ class LocationService {
         final address = data['address'] as Map<String, dynamic>?;
 
         if (address != null) {
-          // Area: road / neighbourhood / suburb
-          final area =
-              address['suburb'] as String? ??
-              address['neighbourhood'] as String? ??
-              address['quarter'] as String? ??
-              address['road'] as String? ??
-              address['pedestrian'] as String?;
+          String? str(String key) {
+            final v = address[key];
+            if (v is String && v.trim().isNotEmpty) return v.trim();
+            return null;
+          }
 
-          // City: city / town / village / county
+          // Door-step level: house/building number + name.
+          final houseNumber = str('house_number');
+          final building = str('building') ?? str('house_name');
+
+          // Street level.
+          final road =
+              str('road') ?? str('pedestrian') ?? str('footway') ?? str('path');
+
+          // Immediate locality (colony/mohalla level — more precise than city).
+          final locality = str('neighbourhood') ??
+              str('suburb') ??
+              str('quarter') ??
+              str('residential');
+
+          // City / town.
           final city =
-              address['city'] as String? ??
-              address['town'] as String? ??
-              address['village'] as String? ??
-              address['county'] as String?;
+              str('city') ?? str('town') ?? str('village') ?? str('county');
 
-          // State
-          final state = address['state'] as String?;
+          final state = str('state');
+
+          // Build the door-step line, e.g. "12, MG Road" or just "MG Road".
+          String? streetLine;
+          if (houseNumber != null && road != null) {
+            streetLine = '$houseNumber, $road';
+          } else {
+            streetLine = building ?? road;
+          }
 
           final parts = <String>[];
-          if (area != null && area.isNotEmpty) parts.add(area);
-          if (city != null && city.isNotEmpty) parts.add(city);
-          if (state != null && state.isNotEmpty) parts.add(state);
+          void add(String? v) {
+            if (v != null && v.isNotEmpty && !parts.contains(v)) parts.add(v);
+          }
+
+          add(streetLine);
+          add(locality);
+          add(city);
+          add(state);
 
           if (parts.isNotEmpty) return parts.join(', ');
         }
 
-        // Fallback to display_name trimmed
+        // Fallback to display_name trimmed (more segments than before, to
+        // keep street-level detail if the structured address was sparse).
         final displayName = data['display_name'] as String?;
         if (displayName != null && displayName.isNotEmpty) {
           final segments = displayName
               .split(',')
-              .take(3)
+              .take(4)
               .map((s) => s.trim())
               .where((s) => s.isNotEmpty)
               .toList();

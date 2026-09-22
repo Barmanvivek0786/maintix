@@ -448,9 +448,9 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
                 Container(
                   width: double.infinity,
                   constraints: const BoxConstraints(minHeight: 480),
-                  decoration: const BoxDecoration(
-                    color: AppTheme.background,
-                    borderRadius: BorderRadius.only(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(32),
                       topRight: Radius.circular(32),
                     ),
@@ -464,7 +464,7 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
-                          color: AppTheme.textPrimary,
+                          color: AppTheme.inputTextColor(context),
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -472,7 +472,9 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
                         'Enter the 6-digit OTP sent to your email',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 14,
-                          color: AppTheme.textSecondary,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? const Color(0xFF9EAAB8)
+                              : AppTheme.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 32),
@@ -511,7 +513,12 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
                                   ),
                                 ),
                                 filled: true,
-                                fillColor: Colors.white,
+                                // Was hardcoded to Colors.white, which made the
+                                // digits (styled with the dark-mode-aware text
+                                // color) invisible in dark mode — white text on
+                                // a white box. Now follows the theme like the
+                                // rest of the form fields.
+                                fillColor: AppTheme.inputFillColor(context),
                               ),
                               inputFormatters: [
                                 FilteringTextInputFormatter.digitsOnly,
@@ -593,7 +600,10 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
                                 'Resend OTP in ${_resendSeconds}s',
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 14,
-                                  color: AppTheme.textSecondary,
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? const Color(0xFF9EAAB8)
+                                      : AppTheme.textSecondary,
                                 ),
                               )
                             : TextButton(
@@ -622,16 +632,22 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
                       Center(
                         child: TextButton.icon(
                           onPressed: _handleChangeEmail,
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.arrow_back_rounded,
                             size: 16,
-                            color: AppTheme.textSecondary,
+                            color: Theme.of(context).brightness ==
+                                    Brightness.dark
+                                ? const Color(0xFF9EAAB8)
+                                : AppTheme.textSecondary,
                           ),
                           label: Text(
                             'Change Email',
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 14,
-                              color: AppTheme.textSecondary,
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? const Color(0xFF9EAAB8)
+                                  : AppTheme.textSecondary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
