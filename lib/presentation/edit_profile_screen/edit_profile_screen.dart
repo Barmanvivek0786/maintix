@@ -28,12 +28,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   XFile? _pickedImageFile;
 
+  /// Keep only digits and the last 10 of them, so a value that already had
+  /// "+91" or spaces saved from before this fix still displays correctly.
+  String _last10Digits(String raw) {
+    final digits = raw.replaceAll(RegExp(r'[^0-9]'), '');
+    return digits.length > 10 ? digits.substring(digits.length - 10) : digits;
+  }
+
   @override
   void initState() {
     super.initState();
     final appState = context.read<AppState>();
     _nameController = TextEditingController(text: appState.userName);
-    _phoneController = TextEditingController(text: appState.userPhone);
+    _phoneController = TextEditingController(
+      text: _last10Digits(appState.userPhone),
+    );
     _cityController = TextEditingController(text: appState.suggestedCity);
   }
 
@@ -95,9 +104,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
 
       final appState = context.read<AppState>();
+      final phoneDigits = _phoneController.text.trim();
       final success = await appState.saveProfileToSupabase(
         name: _nameController.text.trim(),
-        phone: _phoneController.text.trim(),
+        // Store with +91 so it's ready to use for calls/SMS elsewhere in the
+        // app, consistent with how the booking screen shows it.
+        phone: phoneDigits.isEmpty ? '' : '+91 $phoneDigits',
         city: _cityController.text.trim(),
         avatarUrl: newAvatarUrl,
       );
@@ -404,18 +416,40 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   TextFormField(
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
+                    // Cap at 10 digits and strip anything that isn't a digit,
+                    // so it's impossible to type a longer or malformed number.
+                    maxLength: 10,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 15,
                       color: AppTheme.inputTextColor(context),
                     ),
                     decoration: InputDecoration(
-                      hintText: '+91 XXXXX XXXXX',
+                      hintText: '10-digit mobile number',
+                      counterText: '',
                       prefixIcon: Icon(
                         Icons.phone_outlined,
                         color: AppTheme.tealAccent,
                         size: 20,
                       ),
+                      // Fixed, non-editable +91 country code ahead of the
+                      // digits the user types.
+                      prefix: Text(
+                        '+91 ',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.inputTextColor(context),
+                        ),
+                      ),
                     ),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return null;
+                      if (v.trim().length != 10) {
+                        return 'Enter a valid 10-digit mobile number';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 20),
                   // City field

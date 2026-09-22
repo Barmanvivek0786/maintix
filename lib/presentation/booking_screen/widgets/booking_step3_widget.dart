@@ -21,6 +21,31 @@ class _BookingStep3WidgetState extends State<BookingStep3Widget> {
   final _phoneController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    // Pre-fill from whatever is already on this booking (if the user went
+    // back a step) or, failing that, from the user's fetched GPS location /
+    // saved profile phone — so the user only has to review & tweak instead
+    // of retyping their address and number from scratch every booking.
+    final appState = context.read<AppState>();
+    final cart = appState.cartState;
+
+    _addressController.text = cart.address.isNotEmpty
+        ? cart.address
+        : appState.liveLocation;
+    _landmarkController.text = cart.landmark;
+
+    final prefillPhone = cart.phone.isNotEmpty
+        ? cart.phone
+        : appState.userPhone;
+    final digitsOnly = prefillPhone.replaceAll(RegExp(r'[^0-9]'), '');
+    // Drop a leading country code (91) if present, keep the last 10 digits.
+    _phoneController.text = digitsOnly.length > 10
+        ? digitsOnly.substring(digitsOnly.length - 10)
+        : digitsOnly;
+  }
+
+  @override
   void dispose() {
     _addressController.dispose();
     _landmarkController.dispose();
@@ -41,6 +66,7 @@ class _BookingStep3WidgetState extends State<BookingStep3Widget> {
 
   @override
   Widget build(BuildContext context) {
+    final appState = context.watch<AppState>();
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 100),
       child: Form(
@@ -78,7 +104,9 @@ class _BookingStep3WidgetState extends State<BookingStep3Widget> {
               ),
               decoration: InputDecoration(
                 hintText: 'e.g. 12, Gandhi Nagar, Near Bus Stand, Satna',
-                helperText: 'Include house number, street, colony name',
+                helperText: appState.liveLocation.isNotEmpty
+                    ? 'Auto-filled from your current location — edit if needed'
+                    : 'Include house number, street, colony name',
                 helperStyle: GoogleFonts.plusJakartaSans(
                   fontSize: 11,
                   color: AppTheme.textMuted,
@@ -91,6 +119,29 @@ class _BookingStep3WidgetState extends State<BookingStep3Widget> {
                     size: 20,
                   ),
                 ),
+                suffixIcon: appState.locationLoading
+                    ? const Padding(
+                        padding: EdgeInsets.all(14),
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : IconButton(
+                        tooltip: 'Refresh current location',
+                        icon: Icon(
+                          Icons.my_location_rounded,
+                          color: AppTheme.tealAccent,
+                          size: 20,
+                        ),
+                        onPressed: () async {
+                          await appState.fetchAndSaveLocation();
+                          if (mounted && appState.liveLocation.isNotEmpty) {
+                            _addressController.text = appState.liveLocation;
+                          }
+                        },
+                      ),
               ),
               validator: (v) {
                 if (v == null || v.trim().isEmpty) {
