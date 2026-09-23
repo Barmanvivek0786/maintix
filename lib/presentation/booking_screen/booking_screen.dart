@@ -12,6 +12,7 @@ import './widgets/booking_step3_widget.dart';
 import './widgets/booking_step4_widget.dart';
 import './widgets/booking_step5_widget.dart';
 import '../../widgets/gps_enforcement_wrapper.dart';
+import '../../widgets/maintix_logo.dart';
 
 class BookingScreen extends StatefulWidget {
   const BookingScreen({super.key});
@@ -102,20 +103,13 @@ class _BookingScreenState extends State<BookingScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: Image.asset(
-                            'assets/images/maintix_full_logo.png',
-                            width: 56,
-                            height: 56,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const Icon(
-                              Icons.water_drop_rounded,
-                              color: AppTheme.tealAccent,
-                            ),
-                          ),
+                    : const Padding(
+                        padding: EdgeInsets.all(10),
+                        child: MaintixLogo(
+                          width: 56,
+                          height: 56,
+                          borderRadius: 10,
+                          fit: BoxFit.cover,
                         ),
                       ),
                 title: Column(
