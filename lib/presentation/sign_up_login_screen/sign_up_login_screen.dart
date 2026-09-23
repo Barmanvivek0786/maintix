@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../theme/app_theme.dart';
 import '../../routes/app_routes.dart';
 import '../../services/supabase_service.dart';
+import '../../widgets/maintix_logo.dart';
 
 class SignUpLoginScreen extends StatefulWidget {
   const SignUpLoginScreen({super.key});
@@ -128,43 +129,30 @@ class _SignUpLoginScreenState extends State<SignUpLoginScreen>
                         scale: _logoScale,
                         child: FadeTransition(
                           opacity: _logoOpacity,
+                          // Medium-size logo card (reduced from the old
+                          // 160x160 circular mark) with soft rounded
+                          // corners and a white backing so the wordmark
+                          // stays crisp against the navy background.
                           child: Container(
-                            width: 160,
-                            height: 160,
+                            width: 190,
+                            height: 108,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              shape: BoxShape.circle,
+                              borderRadius: BorderRadius.circular(22),
                               border: Border.all(
                                 color: AppTheme.tealAccent.withAlpha(140),
                                 width: 2,
                               ),
                             ),
-                            // The logo artwork is itself a circular mark on a
-                            // white disc — clip it to a circle (not a rounded
-                            // square) so its edge lines up with the frame
-                            // around it instead of leaving mismatched corners.
-                            child: ClipOval(
-                              child: Image.asset(
-                                'assets/images/maintix_full_logo.png',
-                                width: 160,
-                                height: 160,
-                                fit: BoxFit.cover,
-                                // Full-resolution decode + high quality scaling
-                                // so the logo stays sharp on high-density (FHD+)
-                                // screens.
-                                filterQuality: FilterQuality.high,
-                                isAntiAlias: true,
-                                errorBuilder: (_, __, ___) => Center(
-                                  child: Text(
-                                    'M',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 52,
-                                      fontWeight: FontWeight.w900,
-                                      color: AppTheme.tealAccent,
-                                    ),
-                                  ),
-                                ),
-                              ),
+                            child: const MaintixLogo(
+                              width: 162,
+                              height: 84,
+                              borderRadius: 14,
+                              fit: BoxFit.contain,
                             ),
                           ),
                         ),
