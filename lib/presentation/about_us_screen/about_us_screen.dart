@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart'; 
 import '../../theme/app_theme.dart';
+import '../../widgets/maintix_logo.dart';
 
 class AboutUsScreen extends StatelessWidget {
   const AboutUsScreen({super.key});
@@ -50,26 +51,11 @@ class AboutUsScreen extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxWidth: 240,
-                          maxHeight: 140,
-                        ),
-                        child: Image.asset(
-                          'assets/images/maintix_full_logo.png',
-                          width: 220,
-                          height: 132,
-                          fit: BoxFit.contain,
-                          
-                          errorBuilder: (_, __, ___) => Text(
-                            'Maintix',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
+                      const MaintixLogo(
+                        width: 220,
+                        height: 132,
+                        borderRadius: 16,
+                        fit: BoxFit.contain,
                       ),
                       const SizedBox(height: 14),
                       Text(
