@@ -52,9 +52,10 @@ class AboutUsScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       const MaintixLogo(
-                        width: 220,
-                        height: 132,
-                        borderRadius: 16,
+                        // Square (equal width/height), not a rectangle.
+                        width: 160,
+                        height: 160,
+                        borderRadius: 20,
                         fit: BoxFit.contain,
                       ),
                       const SizedBox(height: 14),
