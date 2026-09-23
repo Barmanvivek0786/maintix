@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../theme/app_theme.dart';
+import '../../../widgets/maintix_logo.dart';
 
 class HomeContactFooterWidget extends StatelessWidget {
   const HomeContactFooterWidget({super.key});
@@ -39,34 +40,12 @@ class HomeContactFooterWidget extends StatelessWidget {
         children: [
           Row(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.asset(
-                  'assets/images/maintix_full_logo.png',
-                  width: 64,
-                  height: 64,
-                  fit: BoxFit.cover,
-                  cacheWidth: 128,
-                  cacheHeight: 128,
-                  errorBuilder: (_, __, ___) => Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: AppTheme.tealAccent,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'M',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 22,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+              // New Maintix logo — vector, rounded square (sharp at any size).
+              const MaintixLogo(
+                width: 64,
+                height: 64,
+                borderRadius: 14,
+                fit: BoxFit.cover,
               ),
               const SizedBox(width: 10),
               Column(
