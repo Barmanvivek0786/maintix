@@ -129,29 +129,27 @@ class _SignUpLoginScreenState extends State<SignUpLoginScreen>
                         scale: _logoScale,
                         child: FadeTransition(
                           opacity: _logoOpacity,
-                          // Medium-size logo card (reduced from the old
-                          // 160x160 circular mark) with soft rounded
-                          // corners and a white backing so the wordmark
-                          // stays crisp against the navy background.
+                          // Square logo card (equal width/height) with soft
+                          // rounded corners and a white backing so the
+                          // wordmark stays crisp against the navy
+                          // background — a true square, not a rectangle
+                          // and not a full circle.
                           child: Container(
-                            width: 190,
-                            height: 108,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
-                            ),
+                            width: 150,
+                            height: 150,
+                            padding: const EdgeInsets.all(18),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(22),
+                              borderRadius: BorderRadius.circular(28),
                               border: Border.all(
                                 color: AppTheme.tealAccent.withAlpha(140),
                                 width: 2,
                               ),
                             ),
                             child: const MaintixLogo(
-                              width: 162,
-                              height: 84,
-                              borderRadius: 14,
+                              width: 114,
+                              height: 114,
+                              borderRadius: 18,
                               fit: BoxFit.contain,
                             ),
                           ),
