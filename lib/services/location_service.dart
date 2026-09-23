@@ -19,6 +19,18 @@ class LocationService {
   static LocationService get instance => _instance ??= LocationService._();
   LocationService._();
 
+  // Mappls (MapmyIndia) — primary reverse-geocoder. Mappls has the deepest
+  // India-specific address data (house/building level, gali/mohalla,
+  // society names) — the same tier of precision Zomato/Swiggy/Flipkart use
+  // for their door-step delivery pin, and noticeably better than generic
+  // OSM-based providers for Indian addresses.
+  static const String _mapplsKey = String.fromEnvironment(
+    'MAPPLS_API_KEY',
+    defaultValue: 'afrxvvpdutbnfrctntffykqkdtebbqojdsej',
+  );
+
+  // LocationIQ — kept as a fallback if Mappls is unreachable/fails or
+  // returns no usable result (e.g. outside India).
   static const String _locationIqKey = String.fromEnvironment(
     'LOCATIONIQ_API_KEY',
     defaultValue: 'pk.9021ca0351eccb4c4a9ae57085c14964',
@@ -101,8 +113,87 @@ class LocationService {
     }
   }
 
+  /// Reverse geocode using the Mappls (MapmyIndia) Advanced Maps API, at
+  /// door-step precision — house/building number, street, gali/mohalla
+  /// (sub-locality) and locality, exactly like Zomato/Swiggy/Flipkart show
+  /// on their delivery-address screens.
+  /// Format: "{House no/Building}, {Street}, {Sub-locality/Mohalla}, {Locality}, {City}"
+  Future<String?> reverseGeocodeMappls(double lat, double lon) async {
+    if (_mapplsKey.isEmpty) return null;
+
+    try {
+      final response = await _dio.get(
+        'https://apis.mappls.com/advancedmaps/v1/$_mapplsKey/rev_geocode',
+        queryParameters: {'lat': lat.toString(), 'lng': lon.toString()},
+        options: Options(headers: {'Accept': 'application/json'}),
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data as Map<String, dynamic>;
+        final results = data['results'] as List?;
+        if (results == null || results.isEmpty) return null;
+        final r = results.first as Map<String, dynamic>;
+
+        String? str(String key) {
+          final v = r[key];
+          if (v is String && v.trim().isNotEmpty && v.trim() != 'NA') {
+            return v.trim();
+          }
+          return null;
+        }
+
+        // Door-step level: house/building number + POI/building name.
+        final houseNumber = str('houseNumber');
+        final houseName = str('houseName') ?? str('poi');
+
+        // Street / road.
+        final street = str('street');
+
+        // Gali/mohalla level — the finest granularity below street.
+        final subSubLocality = str('subSubLocality');
+        final subLocality = str('subLocality');
+
+        // Locality / area.
+        final locality = str('locality') ?? str('village');
+
+        // City / district.
+        final city = str('city') ?? str('district') ?? str('subDistrict');
+        final state = str('state');
+        final pincode = str('pincode');
+
+        String? streetLine;
+        if (houseNumber != null && street != null) {
+          streetLine = '$houseNumber, $street';
+        } else {
+          streetLine = houseName ?? street;
+        }
+
+        final parts = <String>[];
+        void add(String? v) {
+          if (v != null && v.isNotEmpty && !parts.contains(v)) parts.add(v);
+        }
+
+        add(streetLine);
+        add(subSubLocality);
+        add(subLocality);
+        add(locality);
+        add(city);
+        add(state);
+        if (pincode != null) add(pincode);
+
+        if (parts.isNotEmpty) return parts.join(', ');
+
+        final formatted = str('formatted_address');
+        if (formatted != null) return formatted;
+      }
+    } catch (e) {
+      debugPrint('reverseGeocodeMappls error: $e');
+    }
+    return null;
+  }
+
   /// Reverse geocode using LocationIQ API, at building/door-step precision
-  /// (zoom=18) — the same level of detail apps like Zomato/Swiggy show.
+  /// (zoom=18). Used as a fallback when Mappls fails or has no coverage.
   /// Format: "{House no/Building}, {Road}, {Area}, {City}"
   Future<String> reverseGeocodeLocationIQ(double lat, double lon) async {
     if (_locationIqKey.isEmpty) {
@@ -196,7 +287,16 @@ class LocationService {
     return '${lat.toStringAsFixed(5)}, ${lon.toStringAsFixed(5)}';
   }
 
-  /// Full flow: request permission → get position → reverse geocode via LocationIQ.
+  /// Reverse geocode with Mappls first (best precision for Indian
+  /// addresses), falling back to LocationIQ, then raw coordinates.
+  Future<String> reverseGeocode(double lat, double lon) async {
+    final mappls = await reverseGeocodeMappls(lat, lon);
+    if (mappls != null && mappls.isNotEmpty) return mappls;
+    return reverseGeocodeLocationIQ(lat, lon);
+  }
+
+  /// Full flow: request permission → get position → reverse geocode
+  /// (Mappls, with LocationIQ fallback).
   Future<LocationResult?> fetchCurrentLocation() async {
     try {
       final granted = await requestPermission();
@@ -205,7 +305,7 @@ class LocationService {
       final position = await getCurrentPosition();
       if (position == null) return null;
 
-      final address = await reverseGeocodeLocationIQ(
+      final address = await reverseGeocode(
         position.latitude,
         position.longitude,
       );
