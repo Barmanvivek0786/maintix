@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 /// Maintix full brand logo (name + tagline) as an embedded high quality
