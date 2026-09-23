@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../theme/app_theme.dart';
 import '../../../providers/app_state.dart';
+import '../../../widgets/maintix_logo.dart';
 
 class HomeHeaderWidget extends StatelessWidget {
   const HomeHeaderWidget({super.key});
@@ -56,37 +57,12 @@ class HomeHeaderWidget extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    // Logo
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.asset(
-                        'assets/images/maintix_full_logo.png',
-                        width: 72,
-                        height: 72,
-                        fit: BoxFit.cover,
-                        // Full-resolution decode + high quality scaling so the
-                        // logo stays sharp on high-density (FHD+) screens.
-                        filterQuality: FilterQuality.high,
-                        isAntiAlias: true,
-                        errorBuilder: (_, __, ___) => Container(
-                          width: 72,
-                          height: 72,
-                          decoration: BoxDecoration(
-                            color: AppTheme.tealAccent,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'M',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                    // Logo (full Maintix wordmark, rounded corners)
+                    const MaintixLogo(
+                      width: 72,
+                      height: 72,
+                      borderRadius: 12,
+                      fit: BoxFit.cover,
                     ),
                     const SizedBox(width: 10),
                     Expanded(
