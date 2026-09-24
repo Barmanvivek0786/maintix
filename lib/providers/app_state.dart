@@ -598,9 +598,9 @@ class AppState extends ChangeNotifier {
     _locationLongitude = null;
     _gpsServiceDisabled = false;
     notifyListeners();
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.remove('theme_mode'); // keep theme preference
-    });
+    // theme_mode is intentionally NOT cleared here — dark/light preference
+    // must survive logout (was previously removed by mistake, which caused
+    // the app to forget dark mode after logging out).
   }
 
   void login({
