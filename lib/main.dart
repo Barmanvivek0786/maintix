@@ -12,6 +12,7 @@ import './routes/app_routes.dart';
 import './services/notification_service.dart';
 import './services/supabase_service.dart';
 import './widgets/custom_error_widget.dart';
+import './widgets/global_tap_effect.dart';
 import 'core/app_export.dart';
 
 /// OneSignal App ID — from OneSignal dashboard (Settings > Keys & IDs) for
@@ -362,7 +363,8 @@ class _MyAppState extends State<MyApp> {
                     data: MediaQuery.of(
                       context,
                     ).copyWith(textScaler: TextScaler.linear(1.0)),
-                    child: child!,
+                    // App-wide tap animation (glow on every tappable widget)
+                    child: GlobalTapEffect(child: child!),
                   );
                 },
                 // 🚨 END CRITICAL SECTION
