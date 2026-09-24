@@ -12,6 +12,8 @@ import '../../../routes/app_routes.dart';
 class ProfileHeaderWidget extends StatelessWidget {
   const ProfileHeaderWidget({super.key});
 
+  static const double _avatarSize = 88;
+
   Widget _buildAvatar(AppState appState) {
     final effectiveUrl = appState.effectiveProfileImageUrl;
 
@@ -25,8 +27,8 @@ class ProfileHeaderWidget extends StatelessWidget {
         return ClipOval(
           child: CachedNetworkImage(
             imageUrl: effectiveUrl,
-            width: 72,
-            height: 72,
+            width: _avatarSize,
+            height: _avatarSize,
             fit: BoxFit.cover,
             placeholder: (_, __) => _initialLetterAvatar(appState),
             errorWidget: (_, __, ___) => _initialLetterAvatar(appState),
@@ -36,8 +38,8 @@ class ProfileHeaderWidget extends StatelessWidget {
         return ClipOval(
           child: Image.file(
             File(effectiveUrl),
-            width: 72,
-            height: 72,
+            width: _avatarSize,
+            height: _avatarSize,
             fit: BoxFit.cover,
             errorBuilder: (_, __, ___) => _initialLetterAvatar(appState),
           ),
@@ -55,19 +57,163 @@ class ProfileHeaderWidget extends StatelessWidget {
               ? appState.userEmail[0].toUpperCase()
               : 'M');
     return Container(
-      width: 72,
-      height: 72,
+      width: _avatarSize,
+      height: _avatarSize,
       decoration: const BoxDecoration(
-        color: AppTheme.tealAccent,
+        gradient: LinearGradient(
+          colors: [AppTheme.tealAccent, Color(0xFF0088A8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         shape: BoxShape.circle,
       ),
       child: Center(
         child: Text(
           initial,
           style: GoogleFonts.plusJakartaSans(
-            fontSize: 28,
+            fontSize: 36,
             fontWeight: FontWeight.w800,
             color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _decorCircle(double size, int alpha) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white.withAlpha(alpha),
+      ),
+    );
+  }
+
+  Widget _buildAvatarWithBadge(BuildContext context, AppState appState) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // Gradient ring
+        Container(
+          padding: const EdgeInsets.all(3),
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              colors: [AppTheme.tealAccent, Color(0xFF9BE7F7)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(3),
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppTheme.primaryNavy,
+            ),
+            child: _buildAvatar(appState),
+          ),
+        ),
+        // Edit badge
+        Positioned(
+          bottom: 2,
+          right: 2,
+          child: GestureDetector(
+            onTap: () => context.push(AppRoutes.editProfileScreen),
+            child: Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppTheme.primaryNavy, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(51),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.edit_rounded,
+                color: AppTheme.tealAccent,
+                size: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLocationTile(BuildContext context, AppState appState) {
+    return SizedBox(
+      width: double.infinity,
+      child: Material(
+        color: Colors.white.withAlpha(20),
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Colors.white.withAlpha(36)),
+        ),
+        child: InkWell(
+          onTap: () => context.push(AppRoutes.editProfileScreen),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppTheme.tealAccent.withAlpha(51),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.location_on_rounded,
+                    color: AppTheme.tealAccent,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'SERVICE LOCATION',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1,
+                          color: Colors.white.withAlpha(140),
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        appState.userCity,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          height: 1.3,
+                          color: Colors.white.withAlpha(230),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: Colors.white.withAlpha(150),
+                  size: 22,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -80,141 +226,106 @@ class ProfileHeaderWidget extends StatelessWidget {
 
     return Container(
       width: double.infinity,
+      clipBehavior: Clip.antiAlias,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [AppTheme.primaryNavy, Color(0xFF1A3F5C)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(32),
+          bottomRight: Radius.circular(32),
+        ),
       ),
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
-      child: Column(
+      child: Stack(
         children: [
-          // Avatar with edit button
-          Stack(
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.white.withAlpha(77),
-                    width: 3,
+          // Subtle decorative circles for a premium feel
+          Positioned(right: -40, top: -40, child: _decorCircle(160, 12)),
+          Positioned(left: -50, bottom: -60, child: _decorCircle(150, 8)),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+            child: Column(
+              children: [
+                _buildAvatarWithBadge(context, appState),
+                const SizedBox(height: 14),
+                Text(
+                  appState.userName.isNotEmpty
+                      ? appState.userName
+                      : 'Maintix User',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.2,
+                    color: Colors.white,
                   ),
                 ),
-                child: _buildAvatar(appState),
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: GestureDetector(
-                  onTap: () => context.push(AppRoutes.editProfileScreen),
-                  child: Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: AppTheme.tealAccent,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                    ),
-                    child: const Icon(
-                      Icons.edit_rounded,
-                      color: Colors.white,
-                      size: 12,
-                    ),
+                const SizedBox(height: 4),
+                Text(
+                  appState.userEmail,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    color: Colors.white.withAlpha(166),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            appState.userName.isNotEmpty ? appState.userName : 'Maintix User',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            appState.userEmail,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 13,
-              color: Colors.white.withAlpha(166),
-            ),
-          ),
-          if (appState.userPhone.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              appState.userPhone,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 13,
-                color: Colors.white.withAlpha(166),
-              ),
-            ),
-          ],
-          const SizedBox(height: 12),
-          if (appState.userCity.isNotEmpty)
-            GestureDetector(
-              onTap: () => context.push(AppRoutes.editProfileScreen),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: AppTheme.tealLight.withAlpha(38),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppTheme.tealAccent.withAlpha(102)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.location_on_rounded,
-                      color: AppTheme.tealAccent,
-                      size: 14,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      appState.userCity,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12,
-                        color: Colors.white.withAlpha(204),
+                if (appState.userPhone.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.phone_rounded,
+                        size: 12,
+                        color: Colors.white.withAlpha(140),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          const SizedBox(height: 10),
-          // Edit Profile button
-          GestureDetector(
-            onTap: () => context.push(AppRoutes.editProfileScreen),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-              decoration: BoxDecoration(
-                color: Colors.white.withAlpha(26),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withAlpha(77)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.edit_rounded, color: Colors.white, size: 13),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Edit Profile',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
+                      const SizedBox(width: 5),
+                      Text(
+                        appState.userPhone,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13,
+                          color: Colors.white.withAlpha(166),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
-              ),
+                const SizedBox(height: 20),
+                if (appState.userCity.isNotEmpty) ...[
+                  _buildLocationTile(context, appState),
+                  const SizedBox(height: 12),
+                ],
+                // Edit Profile button
+                SizedBox(
+                  width: double.infinity,
+                  height: 46,
+                  child: ElevatedButton.icon(
+                    onPressed: () => context.push(AppRoutes.editProfileScreen),
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                    label: Text(
+                      'Edit Profile',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: AppTheme.primaryNavy,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
