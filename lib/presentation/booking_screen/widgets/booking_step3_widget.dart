@@ -248,7 +248,7 @@ class _BookingStep3WidgetState extends State<BookingStep3Widget> {
                       'We currently service all areas in Satna, MP. Our technician will call 30 minutes before arrival.',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 12,
-                        color: AppTheme.primaryNavy,
+                        color: AppTheme.onSurfaceStrong,
                         height: 1.5,
                       ),
                     ),
