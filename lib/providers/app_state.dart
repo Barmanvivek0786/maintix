@@ -213,6 +213,9 @@ class AppState extends ChangeNotifier {
           .select('id')
           .eq('user_id', userId)
           .eq('is_read', false);
+      // Account may have changed while the request was in flight — ignore
+      // the result so one account's count never lands on another account.
+      if (currentUserId != userId) return;
       _unreadNotificationCount = (rows as List).length;
       notifyListeners();
     } catch (e) {
@@ -579,9 +582,16 @@ class AppState extends ChangeNotifier {
     _bookingHistory.clear();
     _userReviews = [];
     _myReviews = [];
+    _publicAvgRating = 0.0;
+    _reviewCredits = 0;
+    _reviewSubmittedAfterLastBooking = false;
     _coinBalance = 0;
     _totalBookingsCount = 0;
     _avgRating = 0.0;
+    // Per-account notification state: old account's badge must not carry over
+    _unreadNotificationCount = 0;
+    // Old account's cart / address / phone must not carry over either
+    _cartState.reset();
     _liveLocation = '';
     _locationPermissionDenied = false;
     _locationLatitude = null;
