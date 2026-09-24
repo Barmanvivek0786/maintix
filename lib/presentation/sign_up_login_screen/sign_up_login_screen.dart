@@ -135,21 +135,21 @@ class _SignUpLoginScreenState extends State<SignUpLoginScreen>
                           // background — a true square, not a rectangle
                           // and not a full circle.
                           child: Container(
-                            width: 150,
-                            height: 150,
-                            padding: const EdgeInsets.all(18),
+                            width: 110,
+                            height: 110,
+                            padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(28),
+                              borderRadius: BorderRadius.circular(22),
                               border: Border.all(
                                 color: AppTheme.tealAccent.withAlpha(140),
                                 width: 2,
                               ),
                             ),
                             child: const MaintixLogo(
-                              width: 114,
-                              height: 114,
-                              borderRadius: 18,
+                              width: 86,
+                              height: 86,
+                              borderRadius: 14,
                               fit: BoxFit.contain,
                             ),
                           ),
