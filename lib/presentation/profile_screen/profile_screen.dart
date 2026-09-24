@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/tap_scale.dart';
 import './widgets/profile_ad_widget.dart';
 import './widgets/profile_header_widget.dart';
 import './widgets/profile_menu_widget.dart';
@@ -30,10 +31,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
+  /// Staggered fade + slide-up entrance for each section.
+  Widget _entry(int index, Widget child) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: Duration(milliseconds: 450 + index * 90),
+      curve: Curves.easeOutCubic,
+      builder: (_, v, c) => Opacity(
+        opacity: v,
+        child: Transform.translate(offset: Offset(0, 24 * (1 - v)), child: c),
+      ),
+      child: child,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Page background is light/dark by theme (header is now a floating card),
-    // so status bar icons follow the theme and stay visible in both modes.
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
@@ -56,26 +69,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
               slivers: [
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  sliver: SliverToBoxAdapter(child: ProfileHeaderWidget()),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                  sliver: SliverToBoxAdapter(child: ProfileStatsWidget()),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                  sliver: SliverToBoxAdapter(child: ProfileAdWidget()),
-                ),
-                // Special Offer sits right below the Active Offer (₹100 OFF) card
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  sliver: const SliverToBoxAdapter(
-                    child: ProfileSpecialOfferWidget(),
+                  sliver: SliverToBoxAdapter(
+                    child: _entry(0, TapScale(scale: 0.985, child: ProfileHeaderWidget())),
                   ),
                 ),
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                  sliver: SliverToBoxAdapter(child: ProfileMenuWidget()),
+                  sliver: SliverToBoxAdapter(
+                    child: _entry(1, TapScale(child: ProfileStatsWidget())),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  sliver: SliverToBoxAdapter(
+                    child: _entry(2, TapScale(child: ProfileAdWidget())),
+                  ),
+                ),
+                // Special Offer sits right below the Active Offer (₹100 OFF) card
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  sliver: SliverToBoxAdapter(
+                    child: _entry(
+                      3,
+                      const TapScale(child: ProfileSpecialOfferWidget()),
+                    ),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  sliver: SliverToBoxAdapter(
+                    child: _entry(4, ProfileMenuWidget()),
+                  ),
                 ),
                 const SliverToBoxAdapter(child: SizedBox(height: 100)),
               ],

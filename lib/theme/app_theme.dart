@@ -73,6 +73,18 @@ class AppTheme {
   /// (navy in light mode, near-white in dark mode).
   static Color get onSurfaceStrong => isDark ? darkTextPrimary : lightNavy;
 
+  /// Brand gradients for cards, buttons and highlights.
+  static const LinearGradient brandGradient = LinearGradient(
+    colors: [Color(0xFF00A8CC), Color(0xFF6C63FF)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+  static const LinearGradient tealGradient = LinearGradient(
+    colors: [Color(0xFF00A8CC), Color(0xFF0088A8)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
   static Color inputTextColor(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
       ? darkTextPrimary
@@ -210,6 +222,19 @@ class AppTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: bg,
       canvasColor: surface,
+      // Tap / hover / focus feedback everywhere (buttons, list tiles, InkWells)
+      splashFactory: InkRipple.splashFactory,
+      splashColor: tealAccent.withAlpha(48),
+      highlightColor: tealAccent.withAlpha(22),
+      hoverColor: tealAccent.withAlpha(20),
+      focusColor: tealAccent.withAlpha(26),
+      // Smooth animated screen transitions
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
       textTheme: _textTheme(textP, textS, textM),
       appBarTheme: AppBarThemeData(
         backgroundColor: navy,
@@ -240,6 +265,8 @@ class AppTheme {
           backgroundColor: tealAccent,
           foregroundColor: Colors.white,
           elevation: 0,
+          animationDuration: const Duration(milliseconds: 250),
+          overlayColor: Colors.white.withAlpha(38),
           padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
