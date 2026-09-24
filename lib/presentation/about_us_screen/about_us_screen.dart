@@ -42,7 +42,7 @@ class AboutUsScreen extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
+                    gradient: LinearGradient(
                       colors: [AppTheme.primaryNavy, Color(0xFF1A3F5C)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -155,7 +155,7 @@ class AboutUsScreen extends StatelessWidget {
                               color: AppTheme.primaryNavy.withAlpha(20),
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.business_rounded,
                               color: AppTheme.primaryNavy,
                               size: 18,
