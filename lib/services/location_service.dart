@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:dio/dio.dart';
@@ -18,6 +20,11 @@ class LocationService {
   static LocationService? _instance;
   static LocationService get instance => _instance ??= LocationService._();
   LocationService._();
+
+  /// User id for which the live location was already auto-refreshed in this
+  /// app session (used by GpsEnforcementWrapper so a stale, coarse address
+  /// saved in the DB is replaced by a fresh Mappls address once per login).
+  String? lastAutoRefreshUserId;
 
   // Mappls (MapmyIndia) — primary reverse-geocoder. Mappls has the deepest
   // India-specific address data (house/building level, gali/mohalla,
@@ -113,84 +120,156 @@ class LocationService {
     }
   }
 
-  /// Reverse geocode using the Mappls (MapmyIndia) Advanced Maps API, at
-  /// door-step precision — house/building number, street, gali/mohalla
-  /// (sub-locality) and locality, exactly like Zomato/Swiggy/Flipkart show
-  /// on their delivery-address screens.
-  /// Format: "{House no/Building}, {Street}, {Sub-locality/Mohalla}, {Locality}, {City}"
-  Future<String?> reverseGeocodeMappls(double lat, double lon) async {
+  // ───────────────────────── Mappls ─────────────────────────
+
+  Map<String, dynamic>? _asMap(dynamic data) {
+    try {
+      if (data is Map) return Map<String, dynamic>.from(data);
+      if (data is String && data.trim().isNotEmpty) {
+        final decoded = jsonDecode(data);
+        if (decoded is Map) return Map<String, dynamic>.from(decoded);
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  String _snippet(dynamic data) {
+    final s = data?.toString() ?? '';
+    return s.length > 200 ? s.substring(0, 200) : s;
+  }
+
+  /// Calls Mappls reverse-geocode and returns the first result object.
+  ///
+  /// Mappls has two auth styles and a key only works with one of them:
+  ///  1. Current API  : search.mappls.com/search/address/rev-geocode?access_token=KEY
+  ///  2. Legacy REST  : apis.mappls.com/advancedmaps/v1/KEY/rev_geocode
+  /// We try both, so the address is fetched whichever key type is configured.
+  /// HTTP status + body snippet are logged (debugPrint) on failure so the
+  /// real reason (401 invalid key / 403 not enabled / quota) is visible.
+  Future<Map<String, dynamic>?> _fetchMapplsResult(
+    double lat,
+    double lon,
+  ) async {
     if (_mapplsKey.isEmpty) return null;
 
-    try {
-      final response = await _dio.get(
+    final options = Options(
+      headers: {'Accept': 'application/json'},
+      // Do not throw on 4xx so we can log the real error body.
+      validateStatus: (s) => s != null && s < 500,
+    );
+
+    final attempts = <String, Future<Response<dynamic>> Function()>{
+      'access_token': () => _dio.get(
+        'https://search.mappls.com/search/address/rev-geocode',
+        queryParameters: {
+          'lat': lat.toString(),
+          'lng': lon.toString(),
+          'access_token': _mapplsKey,
+        },
+        options: options,
+      ),
+      'legacy-key': () => _dio.get(
         'https://apis.mappls.com/advancedmaps/v1/$_mapplsKey/rev_geocode',
         queryParameters: {'lat': lat.toString(), 'lng': lon.toString()},
-        options: Options(headers: {'Accept': 'application/json'}),
-      );
+        options: options,
+      ),
+    };
 
-      if (response.statusCode == 200 && response.data != null) {
-        final data = response.data as Map<String, dynamic>;
-        final results = data['results'] as List?;
-        if (results == null || results.isEmpty) return null;
-        final r = results.first as Map<String, dynamic>;
-
-        String? str(String key) {
-          final v = r[key];
-          if (v is String && v.trim().isNotEmpty && v.trim() != 'NA') {
-            return v.trim();
+    for (final entry in attempts.entries) {
+      try {
+        final response = await entry.value();
+        final map = _asMap(response.data);
+        if (response.statusCode == 200 && map != null) {
+          final results = map['results'];
+          if (results is List && results.isNotEmpty && results.first is Map) {
+            return Map<String, dynamic>.from(results.first as Map);
           }
-          return null;
         }
-
-        // Door-step level: house/building number + POI/building name.
-        final houseNumber = str('houseNumber');
-        final houseName = str('houseName') ?? str('poi');
-
-        // Street / road.
-        final street = str('street');
-
-        // Gali/mohalla level — the finest granularity below street.
-        final subSubLocality = str('subSubLocality');
-        final subLocality = str('subLocality');
-
-        // Locality / area.
-        final locality = str('locality') ?? str('village');
-
-        // City / district.
-        final city = str('city') ?? str('district') ?? str('subDistrict');
-        final state = str('state');
-        final pincode = str('pincode');
-
-        String? streetLine;
-        if (houseNumber != null && street != null) {
-          streetLine = '$houseNumber, $street';
-        } else {
-          streetLine = houseName ?? street;
-        }
-
-        final parts = <String>[];
-        void add(String? v) {
-          if (v != null && v.isNotEmpty && !parts.contains(v)) parts.add(v);
-        }
-
-        add(streetLine);
-        add(subSubLocality);
-        add(subLocality);
-        add(locality);
-        add(city);
-        add(state);
-        if (pincode != null) add(pincode);
-
-        if (parts.isNotEmpty) return parts.join(', ');
-
-        final formatted = str('formatted_address');
-        if (formatted != null) return formatted;
+        debugPrint(
+          'Mappls (${entry.key}) HTTP ${response.statusCode}: '
+          '${_snippet(response.data)}',
+        );
+      } catch (e) {
+        debugPrint('Mappls (${entry.key}) error: $e');
       }
-    } catch (e) {
-      debugPrint('reverseGeocodeMappls error: $e');
     }
     return null;
   }
+
+  /// Reverse geocode using Mappls (MapmyIndia), at door-step precision —
+  /// house/building number, street, gali/mohalla (sub-locality) and locality,
+  /// like Zomato/Swiggy/Blinkit delivery-address screens.
+  /// Format: "{House no/Building}, {Street}, {Gali}, {Mohalla}, {Locality}, {City}, {State}, {Pincode}"
+  Future<String?> reverseGeocodeMappls(double lat, double lon) async {
+    final r = await _fetchMapplsResult(lat, lon);
+    if (r == null) return null;
+
+    String? str(String key) {
+      final v = r[key];
+      if (v is String) {
+        final t = v.trim();
+        if (t.isNotEmpty && t.toUpperCase() != 'NA') return t;
+      }
+      return null;
+    }
+
+    // "Satna District" -> "Satna"
+    String? cleanDistrict(String? v) {
+      if (v == null) return null;
+      return v.replaceAll(RegExp(r'\s+District$', caseSensitive: false), '');
+    }
+
+    // Door-step level: house/building number + POI/building name.
+    final houseNumber = str('houseNumber');
+    final houseName = str('houseName') ?? str('poi');
+
+    // Street / road — skip Mappls' placeholder for unnamed roads.
+    var street = str('street');
+    if (street != null && street.toLowerCase().startsWith('unnamed road')) {
+      street = null;
+    }
+
+    // Gali/mohalla level — the finest granularity below street.
+    final subSubLocality = str('subSubLocality');
+    final subLocality = str('subLocality');
+
+    // Locality / area.
+    final locality = str('locality') ?? str('village');
+
+    // City / district.
+    final city =
+        str('city') ??
+        cleanDistrict(str('district')) ??
+        cleanDistrict(str('subDistrict'));
+    final state = str('state');
+    final pincode = str('pincode');
+
+    String? streetLine;
+    if (houseNumber != null && street != null) {
+      streetLine = '$houseNumber, $street';
+    } else {
+      streetLine = houseNumber ?? houseName ?? street;
+    }
+
+    final parts = <String>[];
+    void add(String? v) {
+      if (v != null && v.isNotEmpty && !parts.contains(v)) parts.add(v);
+    }
+
+    add(streetLine);
+    add(subSubLocality);
+    add(subLocality);
+    add(locality);
+    add(city);
+    add(state);
+    add(pincode);
+
+    if (parts.isNotEmpty) return parts.join(', ');
+
+    return str('formatted_address');
+  }
+
+  // ───────────────────────── LocationIQ (fallback) ─────────────────────────
 
   /// Reverse geocode using LocationIQ API, at building/door-step precision
   /// (zoom=18). Used as a fallback when Mappls fails or has no coverage.
@@ -236,7 +315,8 @@ class LocationService {
               str('road') ?? str('pedestrian') ?? str('footway') ?? str('path');
 
           // Immediate locality (colony/mohalla level — more precise than city).
-          final locality = str('neighbourhood') ??
+          final locality =
+              str('neighbourhood') ??
               str('suburb') ??
               str('quarter') ??
               str('residential');
@@ -287,12 +367,27 @@ class LocationService {
     return '${lat.toStringAsFixed(5)}, ${lon.toStringAsFixed(5)}';
   }
 
+  int _detailCount(String address) =>
+      address.split(',').where((s) => s.trim().isNotEmpty).length;
+
   /// Reverse geocode with Mappls first (best precision for Indian
-  /// addresses), falling back to LocationIQ, then raw coordinates.
+  /// addresses). If Mappls fails, or only returns a coarse address
+  /// (just city/state), LocationIQ is also tried and the more detailed of
+  /// the two is used. Raw coordinates are the last resort.
   Future<String> reverseGeocode(double lat, double lon) async {
     final mappls = await reverseGeocodeMappls(lat, lon);
-    if (mappls != null && mappls.isNotEmpty) return mappls;
-    return reverseGeocodeLocationIQ(lat, lon);
+    // 4+ parts => street/gali/locality-level detail is present.
+    if (mappls != null && mappls.isNotEmpty && _detailCount(mappls) >= 4) {
+      return mappls;
+    }
+
+    final fallback = await reverseGeocodeLocationIQ(lat, lon);
+    if (mappls != null &&
+        mappls.isNotEmpty &&
+        _detailCount(mappls) >= _detailCount(fallback)) {
+      return mappls;
+    }
+    return fallback;
   }
 
   /// Full flow: request permission → get position → reverse geocode

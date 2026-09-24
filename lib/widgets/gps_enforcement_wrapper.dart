@@ -43,10 +43,24 @@ class _GpsEnforcementWrapperState extends State<GpsEnforcementWrapper>
     if (!mounted) return;
     final appState = context.read<AppState>();
     await appState.checkGpsServiceStatus();
-    // If GPS just came back on and we have no location, fetch it
+    if (!mounted) return;
+
+    // Fetch when GPS is on and either:
+    //  - we have no location yet, or
+    //  - this is the first visit for this user in this session. The location
+    //    loaded from the DB at login can be an old / coarse address (e.g. only
+    //    "Satna, Madhya Pradesh") and would otherwise never be refreshed with
+    //    the detailed Mappls address (gali / mohalla / street).
+    final userId = appState.currentUserId;
+    final needsFirstRefresh =
+        appState.isLoggedIn &&
+        userId != null &&
+        LocationService.instance.lastAutoRefreshUserId != userId;
+
     if (!appState.gpsServiceDisabled &&
-        appState.liveLocation.isEmpty &&
-        !appState.locationLoading) {
+        !appState.locationLoading &&
+        (appState.liveLocation.isEmpty || needsFirstRefresh)) {
+      LocationService.instance.lastAutoRefreshUserId = userId;
       appState.fetchAndSaveLocation();
     }
   }
