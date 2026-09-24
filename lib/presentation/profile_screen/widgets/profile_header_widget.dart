@@ -12,7 +12,7 @@ import '../../../routes/app_routes.dart';
 class ProfileHeaderWidget extends StatelessWidget {
   const ProfileHeaderWidget({super.key});
 
-  static const double _avatarSize = 88;
+  static const double _avatarSize = 92;
 
   Widget _buildAvatar(AppState appState) {
     final effectiveUrl = appState.effectiveProfileImageUrl;
@@ -71,7 +71,7 @@ class ProfileHeaderWidget extends StatelessWidget {
         child: Text(
           initial,
           style: GoogleFonts.plusJakartaSans(
-            fontSize: 36,
+            fontSize: 38,
             fontWeight: FontWeight.w800,
             color: Colors.white,
           ),
@@ -95,16 +95,22 @@ class ProfileHeaderWidget extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // Gradient ring
         Container(
           padding: const EdgeInsets.all(3),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               colors: [AppTheme.tealAccent, Color(0xFF9BE7F7)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.tealAccent.withAlpha(90),
+                blurRadius: 24,
+                spreadRadius: 1,
+              ),
+            ],
           ),
           child: Container(
             padding: const EdgeInsets.all(3),
@@ -115,7 +121,6 @@ class ProfileHeaderWidget extends StatelessWidget {
             child: _buildAvatar(appState),
           ),
         ),
-        // Edit badge
         Positioned(
           bottom: 2,
           right: 2,
@@ -148,6 +153,36 @@ class ProfileHeaderWidget extends StatelessWidget {
     );
   }
 
+  Widget _pill(IconData icon, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(20),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withAlpha(30)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: AppTheme.tealAccent),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w500,
+                color: Colors.white.withAlpha(220),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildLocationTile(BuildContext context, AppState appState) {
     return SizedBox(
       width: double.infinity,
@@ -165,11 +200,11 @@ class ProfileHeaderWidget extends StatelessWidget {
             child: Row(
               children: [
                 Container(
-                  width: 36,
-                  height: 36,
+                  width: 38,
+                  height: 38,
                   decoration: BoxDecoration(
                     color: AppTheme.tealAccent.withAlpha(51),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(11),
                   ),
                   child: const Icon(
                     Icons.location_on_rounded,
@@ -187,7 +222,7 @@ class ProfileHeaderWidget extends StatelessWidget {
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
-                          letterSpacing: 1,
+                          letterSpacing: 1.2,
                           color: Colors.white.withAlpha(140),
                         ),
                       ),
@@ -223,13 +258,14 @@ class ProfileHeaderWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
+    final topInset = MediaQuery.of(context).padding.top;
 
     return Container(
       width: double.infinity,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppTheme.primaryNavy, Color(0xFF1A3F5C)],
+          colors: [AppTheme.primaryNavy, AppTheme.headerAlt],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -237,18 +273,24 @@ class ProfileHeaderWidget extends StatelessWidget {
           bottomLeft: Radius.circular(32),
           bottomRight: Radius.circular(32),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(46),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Stack(
         children: [
-          // Subtle decorative circles for a premium feel
-          Positioned(right: -40, top: -40, child: _decorCircle(160, 12)),
-          Positioned(left: -50, bottom: -60, child: _decorCircle(150, 8)),
+          Positioned(right: -50, top: -50, child: _decorCircle(180, 12)),
+          Positioned(left: -60, bottom: -70, child: _decorCircle(170, 8)),
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+            padding: EdgeInsets.fromLTRB(20, topInset + 24, 20, 24),
             child: Column(
               children: [
                 _buildAvatarWithBadge(context, appState),
-                const SizedBox(height: 14),
+                const SizedBox(height: 16),
                 Text(
                   appState.userName.isNotEmpty
                       ? appState.userName
@@ -257,70 +299,94 @@ class ProfileHeaderWidget extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 22,
+                    fontSize: 23,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.2,
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  appState.userEmail,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    color: Colors.white.withAlpha(166),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
                   ),
-                ),
-                if (appState.userPhone.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Row(
+                  decoration: BoxDecoration(
+                    color: AppTheme.tealAccent.withAlpha(40),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.phone_rounded,
-                        size: 12,
-                        color: Colors.white.withAlpha(140),
+                      const Icon(
+                        Icons.verified_rounded,
+                        size: 13,
+                        color: AppTheme.tealAccent,
                       ),
                       const SizedBox(width: 5),
                       Text(
-                        appState.userPhone,
+                        'MAINTIX MEMBER',
                         style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13,
-                          color: Colors.white.withAlpha(166),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.1,
+                          color: AppTheme.tealAccent,
                         ),
                       ),
                     ],
                   ),
+                ),
+                const SizedBox(height: 16),
+                if (appState.userEmail.isNotEmpty)
+                  _pill(Icons.mail_rounded, appState.userEmail),
+                if (appState.userPhone.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  _pill(Icons.phone_rounded, appState.userPhone),
                 ],
                 const SizedBox(height: 20),
                 if (appState.userCity.isNotEmpty) ...[
                   _buildLocationTile(context, appState),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
                 ],
-                // Edit Profile button
-                SizedBox(
+                Container(
                   width: double.infinity,
-                  height: 46,
-                  child: ElevatedButton.icon(
-                    onPressed: () => context.push(AppRoutes.editProfileScreen),
-                    icon: const Icon(Icons.edit_outlined, size: 18),
-                    label: Text(
-                      'Edit Profile',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                      ),
+                  height: 48,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    gradient: const LinearGradient(
+                      colors: [AppTheme.tealAccent, Color(0xFF0088A8)],
                     ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: AppTheme.primaryNavy,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.tealAccent.withAlpha(90),
+                        blurRadius: 14,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(14),
+                      onTap: () => context.push(AppRoutes.editProfileScreen),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.edit_outlined,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Edit Profile',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

@@ -32,46 +32,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // The header is dark navy in BOTH themes and now draws under the status
+    // bar, so status bar icons must always be light to stay visible.
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: Theme.of(context).brightness == Brightness.dark
-          ? SystemUiOverlayStyle.light
-          : SystemUiOverlayStyle.dark,
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
       child: Scaffold(
         backgroundColor: AppTheme.background,
-        body: SafeArea(
-          bottom: false,
-          child: RefreshIndicator(
-            onRefresh: () => context.read<AppState>().refreshAllData(
-              refreshLocation: false,
+        body: RefreshIndicator(
+          onRefresh: () => context.read<AppState>().refreshAllData(
+            refreshLocation: false,
+          ),
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
             ),
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(
-                parent: BouncingScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(child: ProfileHeaderWidget()),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                sliver: SliverToBoxAdapter(child: ProfileStatsWidget()),
               ),
-              slivers: [
-                SliverToBoxAdapter(child: ProfileHeaderWidget()),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                  sliver: SliverToBoxAdapter(child: ProfileStatsWidget()),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                sliver: SliverToBoxAdapter(child: ProfileAdWidget()),
+              ),
+              // Special Offer sits right below the Active Offer (₹100 OFF) card
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                sliver: const SliverToBoxAdapter(
+                  child: ProfileSpecialOfferWidget(),
                 ),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                  sliver: SliverToBoxAdapter(child: ProfileAdWidget()),
-                ),
-                // Special Offer sits right below the Active Offer (₹100 OFF) card
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  sliver: const SliverToBoxAdapter(
-                    child: ProfileSpecialOfferWidget(),
-                  ),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                  sliver: SliverToBoxAdapter(child: ProfileMenuWidget()),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 100)),
-              ],
-            ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                sliver: SliverToBoxAdapter(child: ProfileMenuWidget()),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            ],
           ),
         ),
       ),
