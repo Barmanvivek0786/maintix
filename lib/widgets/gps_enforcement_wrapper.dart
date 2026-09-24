@@ -107,7 +107,7 @@ class _GpsDisabledOverlay extends StatelessWidget {
             margin: const EdgeInsets.symmetric(horizontal: 32),
             padding: const EdgeInsets.all(28),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppTheme.surfaceWhite,
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
@@ -135,7 +135,9 @@ class _GpsDisabledOverlay extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                   permissionDenied ? 'Location Permission Required' : 'GPS Required',
+                  permissionDenied
+                      ? 'Location Permission Required'
+                      : 'GPS Required',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
@@ -144,9 +146,9 @@ class _GpsDisabledOverlay extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                   permissionDenied
-                       ? 'Allow location access in Settings so Maintix can provide accurate service location and booking.'
-                       : 'Maintix requires your device GPS to be turned on to provide accurate service location and booking.',
+                  permissionDenied
+                      ? 'Allow location access in Settings so Maintix can provide accurate service location and booking.'
+                      : 'Maintix requires your device GPS to be turned on to provide accurate service location and booking.',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 13,
                     color: AppTheme.textSecondary,
@@ -159,22 +161,22 @@ class _GpsDisabledOverlay extends StatelessWidget {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () async {
-                       if (permissionDenied) {
-                         await LocationService.instance.openAppSettings();
-                       } else {
-                         await LocationService.instance.openLocationSettings();
-                       }
+                      if (permissionDenied) {
+                        await LocationService.instance.openAppSettings();
+                      } else {
+                        await LocationService.instance.openLocationSettings();
+                      }
                     },
                     icon: const Icon(Icons.settings_rounded, size: 18),
                     label: Text(
-                       permissionDenied ? 'Allow Location' : 'Enable GPS',
+                      permissionDenied ? 'Allow Location' : 'Enable GPS',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryNavy,
+                      backgroundColor: AppTheme.tealAccent,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -186,9 +188,9 @@ class _GpsDisabledOverlay extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                   permissionDenied
-                       ? 'App will resume automatically once location access is allowed.'
-                       : 'App will resume automatically once GPS is enabled.',
+                  permissionDenied
+                      ? 'App will resume automatically once location access is allowed.'
+                      : 'App will resume automatically once GPS is enabled.',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 11,
                     color: AppTheme.textMuted,

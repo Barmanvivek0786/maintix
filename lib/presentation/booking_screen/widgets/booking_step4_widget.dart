@@ -993,7 +993,7 @@ class _PaymentSuccessModal extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.surfaceWhite,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(

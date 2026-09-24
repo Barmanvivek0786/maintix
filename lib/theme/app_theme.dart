@@ -2,399 +2,295 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+/// App-wide theme tokens.
+///
+/// The neutral tokens (background, surfaceWhite, textPrimary, ...) are
+/// getters that resolve to the light or the dark palette depending on
+/// [isDark]. [isDark] is updated by [applySystemUI], which the root
+/// Consumer<AppState> calls on every theme-mode change; at that point the
+/// whole widget tree is force-rebuilt so every screen picks up the new
+/// palette (including widgets that never call Theme.of(context)).
+///
+/// Brand / status colours (tealAccent, success, warning, error) are
+/// identical in both themes and stay `const`.
 class AppTheme {
-  // THEME LOCK: light — source: domain signal (consumer home service, outdoor visibility)
+  AppTheme._();
 
-  static const Color primaryNavy = Color(0xFF0F2942);
+  /// Current brightness. Do not set directly; call [applySystemUI].
+  static bool isDark = false;
+
+  // -- Brand / status (same in both themes) --
   static const Color tealAccent = Color(0xFF00A8CC);
-  static const Color tealLight = Color(0xFFE0F6FB);
-  static const Color background = Color(0xFFF4F7FC);
-  static const Color surfaceWhite = Color(0xFFFFFFFF);
   static const Color success = Color(0xFF2ECC71);
   static const Color warning = Color(0xFFF39C12);
   static const Color error = Color(0xFFE74C3C);
-  static const Color textPrimary = Color(0xFF1A2B3C);
-  static const Color textSecondary = Color(0xFF6B7A8D);
-  static const Color textMuted = Color(0xFF9EAAB8);
-  static const Color divider = Color(0xFFE8EDF3);
-  static const Color cardShadow = Color(0x1A0F2942);
+
+  // -- Light palette --
+  static const Color lightNavy = Color(0xFF0F2942);
+  static const Color lightNavy2 = Color(0xFF1A3F5C);
+  static const Color lightBackground = Color(0xFFF4F7FC);
+  static const Color lightSurface = Color(0xFFFFFFFF);
+  static const Color lightSurfaceAlt = Color(0xFFF0F4F8);
+  static const Color lightTextPrimary = Color(0xFF1A2B3C);
+  static const Color lightTextSecondary = Color(0xFF6B7A8D);
+  static const Color lightTextMuted = Color(0xFF9EAAB8);
+  static const Color lightDivider = Color(0xFFE8EDF3);
+  static const Color lightTealTint = Color(0xFFE0F6FB);
+  static const Color lightShadow = Color(0x1A0F2942);
+  static const Color lightInputFill = Color(0xFFFFFFFF);
+  static const Color lightOutline = Color(0xFFCDD5E0);
+
+  // -- Dark palette (charcoal screen, near-black cards, white text) --
+  static const Color darkNavy = Color(0xFF1B1B1B); // headers, nav bar, app bar
+  static const Color darkNavy2 = Color(0xFF2A2A2A);
+  static const Color darkBackground = Color(0xFF1E1E1E);
+  static const Color darkSurface = Color(0xFF0B0B0B);
+  static const Color darkSurfaceAlt = Color(0xFF171717);
+  static const Color darkTextPrimary = Color(0xFFF5F5F5);
+  static const Color darkTextSecondary = Color(0xFFA9A9A9);
+  static const Color darkTextMuted = Color(0xFF7C7C7C);
+  static const Color darkDivider = Color(0xFF2C2C2C);
+  static const Color darkTealTint = Color(0xFF10343D);
+  static const Color darkShadow = Color(0x40000000);
+  static const Color darkInputFill = Color(0xFF181818);
+  static const Color darkOutline = Color(0xFF3A3A3A);
+
+  // -- Theme-aware tokens (use these in screens) --
+  static Color get primaryNavy => isDark ? darkNavy : lightNavy;
+  static Color get headerAlt => isDark ? darkNavy2 : lightNavy2;
+  static Color get background => isDark ? darkBackground : lightBackground;
+  static Color get surfaceWhite => isDark ? darkSurface : lightSurface;
+  static Color get surfaceAlt => isDark ? darkSurfaceAlt : lightSurfaceAlt;
+  static Color get textPrimary => isDark ? darkTextPrimary : lightTextPrimary;
+  static Color get textSecondary =>
+      isDark ? darkTextSecondary : lightTextSecondary;
+  static Color get textMuted => isDark ? darkTextMuted : lightTextMuted;
+  static Color get divider => isDark ? darkDivider : lightDivider;
+  static Color get tealLight => isDark ? darkTealTint : lightTealTint;
+  static Color get cardShadow => isDark ? darkShadow : lightShadow;
+
+  /// Strong text / icon colour for content sitting on a card or background
+  /// (navy in light mode, near-white in dark mode).
+  static Color get onSurfaceStrong => isDark ? darkTextPrimary : lightNavy;
 
   static Color inputTextColor(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
-      ? Colors.white
-      : textPrimary;
+      ? darkTextPrimary
+      : lightTextPrimary;
 
   static Color inputFillColor(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
-      ? const Color(0xFF1E2A38)
-      : surfaceWhite;
+      ? darkInputFill
+      : lightInputFill;
 
-  /// Call this whenever the theme changes to keep status bar icons in sync.
+  /// Call whenever the theme mode changes. Updates [isDark], keeps the status
+  /// bar / navigation bar icons readable and forces a full rebuild so that
+  /// every widget re-reads the palette.
   static void applySystemUI(ThemeMode mode) {
-    final isDark = mode == ThemeMode.dark;
+    final dark = mode == ThemeMode.dark;
+    final changed = dark != isDark;
+    isDark = dark;
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        // Light mode: dark icons on light background (visible)
-        // Dark mode: light icons on dark background (visible)
-        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+        statusBarIconBrightness: dark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: dark ? Brightness.dark : Brightness.light,
         systemNavigationBarColor: Colors.transparent,
-        systemNavigationBarIconBrightness: isDark
+        systemNavigationBarIconBrightness: dark
             ? Brightness.light
             : Brightness.dark,
         systemNavigationBarDividerColor: Colors.transparent,
       ),
     );
+    if (changed) _rebuildEverything();
   }
 
-  static ThemeData get lightTheme => ThemeData(
-    useMaterial3: true,
-    colorScheme: ColorScheme.light(
-      primary: primaryNavy,
-      onPrimary: Colors.white,
-      primaryContainer: tealLight,
-      onPrimaryContainer: primaryNavy,
-      secondary: tealAccent,
-      onSecondary: Colors.white,
-      secondaryContainer: tealLight,
-      onSecondaryContainer: primaryNavy,
-      surface: surfaceWhite,
-      onSurface: textPrimary,
-      surfaceContainerHighest: background,
-      onSurfaceVariant: textSecondary,
-      error: error,
-      onError: Colors.white,
-      outline: Color(0xFFCDD5E0),
-      outlineVariant: Color(0xFFE8EDF3),
-      inverseSurface: primaryNavy,
-      onInverseSurface: Colors.white,
-    ),
-    scaffoldBackgroundColor: background,
-    textTheme: GoogleFonts.plusJakartaSansTextTheme(
-      TextTheme(
-        displayLarge: TextStyle(
-          fontSize: 32,
-          fontWeight: FontWeight.w700,
-          color: textPrimary,
-        ),
-        displayMedium: TextStyle(
-          fontSize: 28,
-          fontWeight: FontWeight.w700,
-          color: textPrimary,
-        ),
-        displaySmall: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w700,
-          color: textPrimary,
-        ),
-        headlineLarge: TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.w700,
-          color: textPrimary,
-        ),
-        headlineMedium: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: textPrimary,
-        ),
-        headlineSmall: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: textPrimary,
-        ),
-        titleLarge: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: textPrimary,
-        ),
-        titleMedium: TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-          color: textPrimary,
-        ),
-        titleSmall: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: textPrimary,
-        ),
-        bodyLarge: TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w400,
-          color: textPrimary,
-        ),
-        bodyMedium: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
-          color: textPrimary,
-        ),
-        bodySmall: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-          color: textSecondary,
-        ),
-        labelLarge: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: textPrimary,
-        ),
-        labelMedium: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: textSecondary,
-        ),
-        labelSmall: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-          color: textMuted,
-        ),
-      ),
-    ),
-    appBarTheme: AppBarThemeData(
-      backgroundColor: primaryNavy,
-      foregroundColor: Colors.white,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      systemOverlayStyle: SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.transparent,
-      ),
-      titleTextStyle: GoogleFonts.plusJakartaSans(
-        fontSize: 16,
-        fontWeight: FontWeight.w700,
-        color: Colors.white,
-      ),
-      iconTheme: IconThemeData(color: Colors.white),
-    ),
-    cardTheme: CardThemeData(
-      color: surfaceWhite,
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      margin: EdgeInsets.zero,
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: tealAccent,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        textStyle: GoogleFonts.plusJakartaSans(
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    ),
-    inputDecorationTheme: InputDecorationThemeData(
-      filled: true,
-      fillColor: surfaceWhite,
-      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Color(0xFFCDD5E0), width: 1.5),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Color(0xFFCDD5E0), width: 1.5),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: tealAccent, width: 2),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: error, width: 1.5),
-      ),
-      labelStyle: GoogleFonts.plusJakartaSans(
-        fontSize: 14,
-        color: textSecondary,
-      ),
-      hintStyle: GoogleFonts.plusJakartaSans(fontSize: 14, color: textMuted),
-    ),
-    chipTheme: ChipThemeData(
-      backgroundColor: surfaceWhite,
-      selectedColor: tealAccent,
-      labelStyle: GoogleFonts.plusJakartaSans(
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
-      ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      side: BorderSide(color: Color(0xFFCDD5E0)),
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-    ),
-    dividerTheme: DividerThemeData(color: divider, thickness: 1),
-    bottomNavigationBarTheme: BottomNavigationBarThemeData(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-    ),
-  );
+  static void _rebuildEverything() {
+    final binding = WidgetsBinding.instance;
+    binding.addPostFrameCallback((_) {
+      void rebuild(Element element) {
+        element.markNeedsBuild();
+        element.visitChildren(rebuild);
+      }
 
-  static ThemeData get darkTheme => ThemeData(
-    useMaterial3: true,
-    colorScheme: ColorScheme.dark(
-      primary: tealAccent,
-      onPrimary: Colors.white,
-      primaryContainer: Color(0xFF1A3A52),
-      onPrimaryContainer: tealLight,
-      secondary: tealAccent,
-      onSecondary: Colors.white,
-      surface: Color(0xFF1E2A38),
-      onSurface: Color(0xFFE6EDF5),
-      surfaceContainerHighest: Color(0xFF121E2A),
-      onSurfaceVariant: Color(0xFF9EAAB8),
-      error: Color(0xFFCF6679),
-      onError: Colors.white,
-      outline: Color(0xFF3A4A5C),
-      outlineVariant: Color(0xFF2A3A4C),
-    ),
-    scaffoldBackgroundColor: Color(0xFF0F1E2C),
-    appBarTheme: AppBarThemeData(
-      backgroundColor: Color(0xFF0F2942),
-      foregroundColor: Colors.white,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      systemOverlayStyle: SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.transparent,
-      ),
-      titleTextStyle: GoogleFonts.plusJakartaSans(
-        fontSize: 16,
-        fontWeight: FontWeight.w700,
-        color: Colors.white,
-      ),
-      iconTheme: IconThemeData(color: Colors.white),
-    ),
-    textTheme: GoogleFonts.plusJakartaSansTextTheme(
+      binding.rootElement?.visitChildren(rebuild);
+    });
+    binding.ensureVisualUpdate();
+  }
+
+  static ThemeData get lightTheme => _buildTheme(dark: false);
+  static ThemeData get darkTheme => _buildTheme(dark: true);
+
+  static TextTheme _textTheme(Color p, Color s, Color m) {
+    TextStyle t(double size, FontWeight w, Color c) =>
+        TextStyle(fontSize: size, fontWeight: w, color: c);
+    return GoogleFonts.plusJakartaSansTextTheme(
       TextTheme(
-        displayLarge: TextStyle(
-          fontSize: 32,
-          fontWeight: FontWeight.w700,
-          color: Color(0xFFE6EDF5),
-        ),
-        displayMedium: TextStyle(
-          fontSize: 28,
-          fontWeight: FontWeight.w700,
-          color: Color(0xFFE6EDF5),
-        ),
-        displaySmall: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w700,
-          color: Color(0xFFE6EDF5),
-        ),
-        headlineLarge: TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.w700,
-          color: Color(0xFFE6EDF5),
-        ),
-        headlineMedium: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFFE6EDF5),
-        ),
-        headlineSmall: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFFE6EDF5),
-        ),
-        titleLarge: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFFE6EDF5),
-        ),
-        titleMedium: TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFFE6EDF5),
-        ),
-        titleSmall: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: Color(0xFFE6EDF5),
-        ),
-        bodyLarge: TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w400,
-          color: Color(0xFFE6EDF5),
-        ),
-        bodyMedium: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
-          color: Color(0xFFE6EDF5),
-        ),
-        bodySmall: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-          color: Color(0xFF9EAAB8),
-        ),
-        labelLarge: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFFE6EDF5),
-        ),
-        labelMedium: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF9EAAB8),
-        ),
-        labelSmall: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-          color: Color(0xFF9EAAB8),
-        ),
+        displayLarge: t(32, FontWeight.w700, p),
+        displayMedium: t(28, FontWeight.w700, p),
+        displaySmall: t(24, FontWeight.w700, p),
+        headlineLarge: t(22, FontWeight.w700, p),
+        headlineMedium: t(20, FontWeight.w600, p),
+        headlineSmall: t(18, FontWeight.w600, p),
+        titleLarge: t(16, FontWeight.w600, p),
+        titleMedium: t(15, FontWeight.w600, p),
+        titleSmall: t(14, FontWeight.w500, p),
+        bodyLarge: t(15, FontWeight.w400, p),
+        bodyMedium: t(14, FontWeight.w400, p),
+        bodySmall: t(12, FontWeight.w400, s),
+        labelLarge: t(14, FontWeight.w600, p),
+        labelMedium: t(12, FontWeight.w600, s),
+        labelSmall: t(11, FontWeight.w500, m),
       ),
-    ),
-    cardTheme: CardThemeData(
-      color: Color(0xFF1E2A38),
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      margin: EdgeInsets.zero,
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: tealAccent,
+    );
+  }
+
+  static ThemeData _buildTheme({required bool dark}) {
+    final navy = dark ? darkNavy : lightNavy;
+    final bg = dark ? darkBackground : lightBackground;
+    final surface = dark ? darkSurface : lightSurface;
+    final textP = dark ? darkTextPrimary : lightTextPrimary;
+    final textS = dark ? darkTextSecondary : lightTextSecondary;
+    final textM = dark ? darkTextMuted : lightTextMuted;
+    final dividerColor = dark ? darkDivider : lightDivider;
+    final outline = dark ? darkOutline : lightOutline;
+    final fill = dark ? darkInputFill : lightInputFill;
+
+    final ColorScheme scheme = dark
+        ? ColorScheme.dark(
+            primary: tealAccent,
+            onPrimary: Colors.white,
+            primaryContainer: darkTealTint,
+            onPrimaryContainer: lightTealTint,
+            secondary: tealAccent,
+            onSecondary: Colors.white,
+            secondaryContainer: darkTealTint,
+            onSecondaryContainer: lightTealTint,
+            surface: surface,
+            onSurface: textP,
+            surfaceContainerLowest: bg,
+            surfaceContainerLow: surface,
+            surfaceContainer: surface,
+            surfaceContainerHigh: surface,
+            surfaceContainerHighest: darkInputFill,
+            onSurfaceVariant: textS,
+            error: Color(0xFFCF6679),
+            onError: Colors.white,
+            outline: darkOutline,
+            outlineVariant: darkDivider,
+          )
+        : ColorScheme.light(
+            primary: lightNavy,
+            onPrimary: Colors.white,
+            primaryContainer: lightTealTint,
+            onPrimaryContainer: lightNavy,
+            secondary: tealAccent,
+            onSecondary: Colors.white,
+            secondaryContainer: lightTealTint,
+            onSecondaryContainer: lightNavy,
+            surface: lightSurface,
+            onSurface: lightTextPrimary,
+            surfaceContainerHighest: lightBackground,
+            onSurfaceVariant: lightTextSecondary,
+            error: error,
+            onError: Colors.white,
+            outline: lightOutline,
+            outlineVariant: lightDivider,
+            inverseSurface: lightNavy,
+            onInverseSurface: Colors.white,
+          );
+
+    OutlineInputBorder border(Color c, [double w = 1.5]) => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: c, width: w),
+    );
+
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: scheme,
+      scaffoldBackgroundColor: bg,
+      canvasColor: surface,
+      textTheme: _textTheme(textP, textS, textM),
+      appBarTheme: AppBarThemeData(
+        backgroundColor: navy,
         foregroundColor: Colors.white,
         elevation: 0,
-        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        textStyle: GoogleFonts.plusJakartaSans(
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
+        scrolledUnderElevation: 0,
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
+          systemNavigationBarColor: Colors.transparent,
+        ),
+        titleTextStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
+        iconTheme: IconThemeData(color: Colors.white),
+      ),
+      cardTheme: CardThemeData(
+        color: surface,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        margin: EdgeInsets.zero,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: tealAccent,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          textStyle: GoogleFonts.plusJakartaSans(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
-    ),
-    inputDecorationTheme: InputDecorationThemeData(
-      filled: true,
-      fillColor: Color(0xFF1E2A38),
-      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Color(0xFF3A4A5C), width: 1.5),
+      inputDecorationTheme: InputDecorationThemeData(
+        filled: true,
+        fillColor: fill,
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: border(outline),
+        enabledBorder: border(outline),
+        focusedBorder: border(tealAccent, 2),
+        errorBorder: border(dark ? Color(0xFFCF6679) : error),
+        labelStyle: GoogleFonts.plusJakartaSans(fontSize: 14, color: textS),
+        hintStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 14,
+          color: dark ? textS : textM,
+        ),
       ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Color(0xFF3A4A5C), width: 1.5),
+      chipTheme: ChipThemeData(
+        backgroundColor: surface,
+        selectedColor: tealAccent,
+        labelStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: dark ? textP : null,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        side: BorderSide(color: outline),
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: tealAccent, width: 2),
+      dividerTheme: DividerThemeData(color: dividerColor, thickness: 1),
+      dialogTheme: DialogThemeData(
+        backgroundColor: surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
-      labelStyle: GoogleFonts.plusJakartaSans(
-        fontSize: 14,
-        color: Color(0xFF9EAAB8),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: surface,
+        modalBackgroundColor: surface,
+        surfaceTintColor: Colors.transparent,
       ),
-      hintStyle: GoogleFonts.plusJakartaSans(
-        fontSize: 14,
-        color: Color(0xFF9EAAB8),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-    ),
-    dividerTheme: DividerThemeData(color: Color(0xFF2A3A4C), thickness: 1),
-    bottomNavigationBarTheme: BottomNavigationBarThemeData(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-    ),
-  );
+    );
+  }
 }

@@ -29,8 +29,8 @@ class HomeContactFooterWidget extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppTheme.primaryNavy, Color(0xFF0A3A5C)],
+        gradient: LinearGradient(
+          colors: [AppTheme.primaryNavy, AppTheme.headerAlt],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
