@@ -32,47 +32,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // The header is dark navy in BOTH themes and now draws under the status
-    // bar, so status bar icons must always be light to stay visible.
+    // Page background is light/dark by theme (header is now a floating card),
+    // so status bar icons follow the theme and stay visible in both modes.
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
+      value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
       ),
       child: Scaffold(
         backgroundColor: AppTheme.background,
-        body: RefreshIndicator(
-          onRefresh: () => context.read<AppState>().refreshAllData(
-            refreshLocation: false,
-          ),
-          child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(
-              parent: BouncingScrollPhysics(),
+        body: SafeArea(
+          bottom: false,
+          child: RefreshIndicator(
+            onRefresh: () => context.read<AppState>().refreshAllData(
+              refreshLocation: false,
             ),
-            slivers: [
-              SliverToBoxAdapter(child: ProfileHeaderWidget()),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                sliver: SliverToBoxAdapter(child: ProfileStatsWidget()),
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
               ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                sliver: SliverToBoxAdapter(child: ProfileAdWidget()),
-              ),
-              // Special Offer sits right below the Active Offer (₹100 OFF) card
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                sliver: const SliverToBoxAdapter(
-                  child: ProfileSpecialOfferWidget(),
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  sliver: SliverToBoxAdapter(child: ProfileHeaderWidget()),
                 ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                sliver: SliverToBoxAdapter(child: ProfileMenuWidget()),
-              ),
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
-            ],
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  sliver: SliverToBoxAdapter(child: ProfileStatsWidget()),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  sliver: SliverToBoxAdapter(child: ProfileAdWidget()),
+                ),
+                // Special Offer sits right below the Active Offer (₹100 OFF) card
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  sliver: const SliverToBoxAdapter(
+                    child: ProfileSpecialOfferWidget(),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  sliver: SliverToBoxAdapter(child: ProfileMenuWidget()),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 100)),
+              ],
+            ),
           ),
         ),
       ),
