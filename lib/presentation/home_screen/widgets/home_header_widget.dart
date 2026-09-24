@@ -25,7 +25,6 @@ class HomeHeaderWidget extends StatelessWidget {
     final liveLocation = appState.liveLocation;
     final locationLoading = appState.locationLoading;
     final locationDenied = appState.locationPermissionDenied;
-    final isDark = appState.themeMode == ThemeMode.dark;
 
     // Determine display text for location chip
     String locationText;
@@ -39,11 +38,12 @@ class HomeHeaderWidget extends StatelessWidget {
     }
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.light,
+      // Header is always dark (navy / charcoal) → light status bar icons.
+      value: SystemUiOverlayStyle.light,
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [AppTheme.primaryNavy, Color(0xFF1A3F5C)],
+            colors: [AppTheme.primaryNavy, AppTheme.headerAlt],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -223,8 +223,6 @@ class _LocationBottomSheetState extends State<_LocationBottomSheet> {
       listenable: widget.appState,
       builder: (context, _) {
         final location = widget.appState.liveLocation;
-        final lat = widget.appState.locationLatitude;
-        final lon = widget.appState.locationLongitude;
         final denied = widget.appState.locationPermissionDenied;
 
         return Container(
