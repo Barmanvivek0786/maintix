@@ -27,19 +27,31 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final appState = context.read<AppState>();
     final userId = appState.currentUserId;
     if (userId == null) {
-      setState(() => _loading = false);
+      // Logged out: never show anything from a previous account.
+      if (mounted) {
+        setState(() {
+          _notifications = [];
+          _loading = false;
+        });
+      }
       return;
     }
     final list = await NotificationService.instance.fetchNotifications(userId);
+
+    // If the account changed (logout / login as someone else) while this
+    // request was in flight, drop the result so old-account data never shows.
+    if (!mounted || appState.currentUserId != userId) return;
+
     await NotificationService.instance.markAllRead(userId);
+    if (!mounted || appState.currentUserId != userId) return;
+
     // Clear the red badge dot in AppState
     appState.clearUnreadNotificationCount();
-    if (mounted) {
-      setState(() {
-        _notifications = list;
-        _loading = false;
-      });
-    }
+    setState(() {
+      // Extra safety: only ever keep rows that belong to the current user.
+      _notifications = list.where((n) => n.userId == userId).toList();
+      _loading = false;
+    });
   }
 
   Future<void> _deleteNotification(String id) async {
