@@ -329,7 +329,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                 automaticallyImplyLeading: false,
                 flexibleSpace: FlexibleSpaceBar(
                   background: Container(
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [AppTheme.primaryNavy, Color(0xFF1A3F5C)],
                         begin: Alignment.topLeft,
