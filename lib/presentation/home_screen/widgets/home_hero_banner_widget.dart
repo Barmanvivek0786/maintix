@@ -11,8 +11,8 @@ class HomeHeroBannerWidget extends StatelessWidget {
       height: 180,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
-          colors: [AppTheme.primaryNavy, Color(0xFF0A5A8A)],
+        gradient: LinearGradient(
+          colors: [AppTheme.primaryNavy, const Color(0xFF0A5A8A)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -28,9 +28,9 @@ class HomeHeroBannerWidget extends StatelessWidget {
               height: 180,
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [AppTheme.primaryNavy, Color(0xFF0A5A8A)],
+                    colors: [AppTheme.primaryNavy, const Color(0xFF0A5A8A)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
