@@ -10,7 +10,7 @@ class ReviewsStatsWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           colors: [AppTheme.primaryNavy, Color(0xFF0A5A8A)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,

@@ -108,7 +108,7 @@ class ProfileHeaderWidget extends StatelessWidget {
           ),
           child: Container(
             padding: const EdgeInsets.all(3),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: AppTheme.primaryNavy,
             ),
@@ -227,13 +227,13 @@ class ProfileHeaderWidget extends StatelessWidget {
     return Container(
       width: double.infinity,
       clipBehavior: Clip.antiAlias,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [AppTheme.primaryNavy, Color(0xFF1A3F5C)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.only(
+        borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(32),
           bottomRight: Radius.circular(32),
         ),
