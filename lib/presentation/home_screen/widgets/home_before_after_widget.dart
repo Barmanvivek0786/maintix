@@ -224,7 +224,7 @@ class _HomeBeforeAfterWidgetState extends State<HomeBeforeAfterWidget> {
                           ),
                           child: const Icon(
                             Icons.compare_arrows_rounded,
-                            color: AppTheme.primaryNavy,
+                            color: AppTheme.lightNavy,
                             size: 20,
                           ),
                         ),
