@@ -228,9 +228,9 @@ class _LocationBottomSheetState extends State<_LocationBottomSheet> {
         final denied = widget.appState.locationPermissionDenied;
 
         return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceWhite,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
           child: Column(
