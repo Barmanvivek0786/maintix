@@ -59,9 +59,9 @@ class HomeHeaderWidget extends StatelessWidget {
                   children: [
                     // Logo (full Maintix wordmark, rounded corners)
                     const MaintixLogo(
-                      width: 72,
-                      height: 72,
-                      borderRadius: 12,
+                      width: 56,
+                      height: 56,
+                      borderRadius: 10,
                       fit: BoxFit.cover,
                     ),
                     const SizedBox(width: 10),
