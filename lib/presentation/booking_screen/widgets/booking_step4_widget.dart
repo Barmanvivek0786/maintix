@@ -227,24 +227,51 @@ class _BookingStep4WidgetState extends State<BookingStep4Widget> {
     }
   }
 
-  /// Razorpay reported a failure (declined, cancelled, timed out, or the
-  /// exact "order already paid" retry error). Before scaring the user with
-  /// a "payment failed, try again" toast, check whether the Razorpay
-  /// webhook has already reconciled this order as SUCCESS in the
-  /// background — this happens when the money was genuinely captured but
-  /// the client-side callback never made it back to the app. If so, the
-  /// booking already exists server-side; show success instead of a false
-  /// failure (and, critically, don't let the user pay a second time).
+  /// Razorpay reported a failure (declined, cancelled, timed out, its own
+  /// "Payment could not be completed" gateway hiccup screen, or the exact
+  /// "order already paid" retry error). Before scaring the user with a
+  /// "payment failed, try again" toast, check whether the Razorpay webhook
+  /// has already reconciled this order as SUCCESS in the background — this
+  /// happens when the money was genuinely captured (common with UPI, where
+  /// confirmation can lag well behind the client-side callback) but the
+  /// client-side callback never made it back to the app. If so, the booking
+  /// already exists server-side; show success instead of a false failure
+  /// (and, critically, don't let the user pay a second time).
   Future<void> _handlePaymentFailure(
     String orderId,
     int amountInPaise,
     String errorMsg,
   ) async {
-    // The webhook is usually near-instant but can lag a couple of seconds
-    // behind Razorpay's own client-side callback, so poll briefly instead
-    // of checking once.
-    for (var attempt = 0; attempt < 4; attempt++) {
-      await Future.delayed(Duration(milliseconds: attempt == 0 ? 500 : 1500));
+    if (mounted) {
+      Fluttertoast.showToast(
+        msg: 'Confirming your payment status…',
+        backgroundColor: AppTheme.warning,
+        textColor: Colors.white,
+        toastLength: Toast.LENGTH_SHORT,
+      );
+    }
+
+    // The webhook is usually near-instant but UPI confirmations in
+    // particular can lag several seconds to half a minute behind Razorpay's
+    // own client-side callback. Poll with backoff over ~34s total instead of
+    // giving up after ~5s — that short a window was the reason a payment
+    // that actually succeeded could still get reported as failed with no
+    // success message.
+    const delays = [
+      Duration(milliseconds: 800),
+      Duration(milliseconds: 1500),
+      Duration(seconds: 2),
+      Duration(seconds: 3),
+      Duration(seconds: 3),
+      Duration(seconds: 4),
+      Duration(seconds: 4),
+      Duration(seconds: 5),
+      Duration(seconds: 5),
+      Duration(seconds: 5),
+    ];
+
+    for (final delay in delays) {
+      await Future.delayed(delay);
       final status = await RazorpayService.instance.checkOrderStatus(orderId);
       if (status != null && status['status'] == 'SUCCESS') {
         if (!mounted) return;
@@ -267,9 +294,14 @@ class _BookingStep4WidgetState extends State<BookingStep4Widget> {
     }
 
     if (!mounted) return;
+    // Still unconfirmed after ~34s of polling. Don't tell the user outright
+    // "payment failed" — if the money really was deducted and the webhook is
+    // just slow, that message would push them straight into a risky
+    // duplicate payment. Point them at Booking History instead.
     Fluttertoast.showToast(
-      msg: 'Payment failed. Please try again.',
-      backgroundColor: AppTheme.error,
+      msg:
+          "We couldn't confirm this payment yet. If money was deducted, it will reflect in Booking History shortly — please check there before trying again.",
+      backgroundColor: AppTheme.warning,
       textColor: Colors.white,
       toastLength: Toast.LENGTH_LONG,
     );
