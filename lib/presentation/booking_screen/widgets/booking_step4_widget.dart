@@ -121,12 +121,12 @@ class _BookingStep4WidgetState extends State<BookingStep4Widget> {
     try {
       final int amountInPaise = totalAmount * 100;
 
-      final orderId = await RazorpayService.instance.createOrder(
+      final order = await RazorpayService.instance.createOrder(
         amountRupees: totalAmount,
         receipt: 'rcpt_${DateTime.now().millisecondsSinceEpoch}',
       );
 
-      if (orderId == null) {
+      if (order == null) {
         setState(() => _processingPayment = false);
         Fluttertoast.showToast(
           msg: 'Could not create payment order. Please try again.',
@@ -136,6 +136,12 @@ class _BookingStep4WidgetState extends State<BookingStep4Widget> {
         );
         return;
       }
+
+      final orderId = order['id']!;
+      // Always use the key that the server used to create this order, not
+      // the client's hardcoded fallback — a mismatch between the two is
+      // what causes Razorpay to reject every payment attempt.
+      final effectiveKeyId = order['key'] ?? RazorpayService.keyId;
 
       setState(() => _processingPayment = false);
 
@@ -152,7 +158,7 @@ class _BookingStep4WidgetState extends State<BookingStep4Widget> {
       if (mounted) {
         await launchRazorpayCheckout(
           context: context,
-          keyId: RazorpayService.keyId,
+          keyId: effectiveKeyId,
           orderId: orderId,
           amountInPaise: amountInPaise,
           email: userEmail,
@@ -554,7 +560,7 @@ class _BookingStep4WidgetState extends State<BookingStep4Widget> {
 
           const SizedBox(height: 16),
 
-          // ── Coupon Code Input ──────────────────────────────────────────────
+          // ── Coupon Code Input ────────────────────────────────────────────
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
