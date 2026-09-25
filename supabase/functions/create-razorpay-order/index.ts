@@ -53,11 +53,22 @@ Deno.serve(async (request) => {
 
     const payload = await razorpayResponse.json();
     if (!razorpayResponse.ok) {
-      console.error("Razorpay order creation failed", razorpayResponse.status);
+      console.error("Razorpay order creation failed", razorpayResponse.status, JSON.stringify(payload));
       return json({ error: "Could not create payment order" }, 502);
     }
 
-    return json({ id: payload.id, amount: payload.amount, currency: payload.currency });
+    // Return the server's own key_id alongside the order so the client
+    // checkout ALWAYS uses the exact key that created this order. Using a
+    // different (e.g. stale hardcoded) key on the client than the one that
+    // created the order causes Razorpay to reject every payment attempt
+    // with a generic "Payment could not be completed" error, regardless of
+    // the payment method tried. The key_id is public and safe to return.
+    return json({
+      id: payload.id,
+      amount: payload.amount,
+      currency: payload.currency,
+      key: keyId,
+    });
   } catch (error) {
     console.error("create-razorpay-order error", error);
     return json({ error: "Invalid request" }, 400);

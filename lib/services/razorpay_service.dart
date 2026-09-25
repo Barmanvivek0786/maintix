@@ -6,8 +6,11 @@ class RazorpayService {
   static RazorpayService get instance => _instance ??= RazorpayService._();
   RazorpayService._();
 
-  /// The public Razorpay key is safe to ship to the checkout widget.
-  /// The secret is intentionally kept in the Supabase Edge Function.
+  /// Fallback public Razorpay key, used only if the server does not return
+  /// one. Prefer the `key` returned by [createOrder] — it is guaranteed to
+  /// match the account/mode that actually created the order, which avoids
+  /// "Payment could not be completed" errors caused by a key mismatch
+  /// between order creation (server) and checkout (client).
   static const String keyId = String.fromEnvironment(
     'RAZORPAY_KEY_ID',
     defaultValue: 'rzp_test_TVv2X2c32eqwCg',
@@ -16,8 +19,9 @@ class RazorpayService {
   /// Step 1: Create a Razorpay order through the Supabase Edge Function.
   ///
   /// [amountRupees] — amount in rupees (e.g. 499). Converted strictly to paise internally.
-  /// Returns the Razorpay order_id string on success, null on failure.
-  Future<String?> createOrder({
+  /// Returns a map with 'id' (order id) and 'key' (the exact public key that
+  /// created the order) on success, null on failure.
+  Future<Map<String, String>?> createOrder({
     required int amountRupees,
     String currency = 'INR',
     String? receipt,
@@ -44,9 +48,15 @@ class RazorpayService {
           ? Map<String, dynamic>.from(data)
           : <String, dynamic>{};
       final orderId = body['id'] as String?;
+      final serverKey = body['key'] as String?;
       if (orderId != null && orderId.isNotEmpty) {
         debugPrint('[Razorpay] Order created: $orderId');
-        return orderId;
+        return {
+          'id': orderId,
+          'key': (serverKey != null && serverKey.isNotEmpty)
+              ? serverKey
+              : keyId,
+        };
       }
       debugPrint('[Razorpay] Edge Function returned no order id: $data');
     } catch (e) {
