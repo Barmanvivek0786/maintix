@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 import '../providers/app_state.dart';
 import 'package:provider/provider.dart';
+import 'tap_scale.dart';
 
 // V2 Floating Pill BottomNav — Bold/Premium family
 class AppNavigation extends StatefulWidget {
@@ -51,13 +52,18 @@ class _AppNavigationState extends State<AppNavigation> {
       child: Container(
         height: 64,
         decoration: BoxDecoration(
-          color: AppTheme.primaryNavy,
+          gradient: LinearGradient(
+            colors: [AppTheme.primaryNavy, AppTheme.headerAlt],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: BorderRadius.circular(32),
+          border: Border.all(color: Colors.white.withAlpha(18)),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryNavy.withAlpha(89),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
+              color: AppTheme.primaryNavy.withAlpha(100),
+              blurRadius: 26,
+              offset: const Offset(0, 10),
             ),
           ],
         ),
@@ -67,7 +73,8 @@ class _AppNavigationState extends State<AppNavigation> {
             final isActive = tab.branchIndex == currentIndex;
 
             return Expanded(
-              child: GestureDetector(
+              child: TapScale(
+                scale: 0.9,
                 onTap: () {
                   if (tab.branchIndex == null) return;
                   // When tapping the Booking tab, reset cart so it always shows fresh flow
@@ -79,14 +86,32 @@ class _AppNavigationState extends State<AppNavigation> {
                     initialLocation: tab.branchIndex == currentIndex,
                   );
                 },
-                behavior: HitTestBehavior.opaque,
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 250),
                   curve: Curves.easeOutCubic,
                   margin: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: isActive ? AppTheme.tealAccent : Colors.transparent,
+                    gradient: isActive
+                        ? const LinearGradient(
+                            colors: [
+                              AppTheme.tealAccent,
+                              Color(0xFF0088A8),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
                     borderRadius: BorderRadius.circular(26),
+                    boxShadow: isActive
+                        ? [
+                            BoxShadow(
+                              color: AppTheme.tealAccent.withAlpha(110),
+                              blurRadius: 16,
+                              spreadRadius: 0.5,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                        : null,
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -106,6 +131,7 @@ class _AppNavigationState extends State<AppNavigation> {
                           fontWeight: isActive
                               ? FontWeight.w700
                               : FontWeight.w400,
+                          letterSpacing: 0.2,
                           color: isActive
                               ? Colors.white
                               : Colors.white.withAlpha(140),
