@@ -380,10 +380,14 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen> {
   }
 
   Widget _buildOtpScreen() {
+    // The header + card fill the full screen and the Scaffold background is
+    // always AppTheme.primaryNavy (a dark navy/charcoal shade in BOTH themes),
+    // so the area behind the status bar is always dark regardless of the
+    // app's light/dark theme. Icons must therefore always be light — using
+    // Theme.of(context).brightness here made them dark (invisible) whenever
+    // the app was in light theme.
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: Theme.of(context).brightness == Brightness.dark
-          ? SystemUiOverlayStyle.light
-          : SystemUiOverlayStyle.dark,
+      value: SystemUiOverlayStyle.light,
       child: Scaffold(
         backgroundColor: AppTheme.primaryNavy,
         body: SafeArea(
