@@ -1,9 +1,15 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'tap_scale.dart';
+
+export 'tap_scale.dart' show TapScale, GradientText;
 
 /// Central place for the "premium" visual language used across
 /// Home, Booking, Reviews and Profile: deep midnight-blue -> teal/cyan
 /// gradients, glassmorphism, soft glows and consistent radii.
+///
+/// Tap/press feedback lives in `tap_scale.dart` (re-exported here) — this
+/// file only adds gradients, glass containers and the glowing nav item.
 class AppGradients {
   AppGradients._();
 
@@ -132,53 +138,8 @@ class GradientBoxBorder extends BoxBorder {
   BoxBorder scale(double t) => GradientBoxBorder(gradient: gradient, width: width * t);
 }
 
-/// Equivalent of Tailwind's `active:scale-95 transition duration-200`:
-/// wrap any tappable card/button/nav-item in this for a springy
-/// press-down -> bounce-back feel. Purely visual — pass [onTap] through.
-class TapScale extends StatefulWidget {
-  const TapScale({
-    super.key,
-    required this.child,
-    this.onTap,
-    this.scale = 0.95,
-    this.duration = const Duration(milliseconds: 150),
-  });
-
-  final Widget child;
-  final VoidCallback? onTap;
-  final double scale;
-  final Duration duration;
-
-  @override
-  State<TapScale> createState() => _TapScaleState();
-}
-
-class _TapScaleState extends State<TapScale> {
-  bool _pressed = false;
-
-  void _setPressed(bool value) {
-    if (widget.onTap == null) return;
-    setState(() => _pressed = value);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: widget.onTap,
-      onTapDown: (_) => _setPressed(true),
-      onTapUp: (_) => _setPressed(false),
-      onTapCancel: () => _setPressed(false),
-      child: AnimatedScale(
-        scale: _pressed ? widget.scale : 1.0,
-        duration: widget.duration,
-        curve: Curves.easeOut,
-        child: widget.child,
-      ),
-    );
-  }
-}
-
-/// Bottom-nav item with a soft glowing pill indicator when active.
+/// Bottom-nav / chip item with a soft glowing pill indicator when active.
+/// Uses the shared [TapScale] from tap_scale.dart for press feedback.
 class GlowNavItem extends StatelessWidget {
   const GlowNavItem({
     super.key,
