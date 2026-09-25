@@ -19,12 +19,20 @@ class RazorpayService {
   /// Step 1: Create a Razorpay order through the Supabase Edge Function.
   ///
   /// [amountRupees] — amount in rupees (e.g. 499). Converted strictly to paise internally.
+  /// [cartSnapshot] — a snapshot of what's being booked (tanks, date, time
+  /// slot, address, service name). The server stores this alongside the
+  /// order so that if the app never receives a payment success/failure
+  /// callback (killed mid-UPI-flow, dropped network, etc.), the Razorpay
+  /// webhook can still create the correct booking once the payment is
+  /// confirmed as captured — instead of the booking silently being lost and
+  /// the user hitting Razorpay's "order already paid" error on retry.
   /// Returns a map with 'id' (order id) and 'key' (the exact public key that
   /// created the order) on success, null on failure.
   Future<Map<String, String>?> createOrder({
     required int amountRupees,
     String currency = 'INR',
     String? receipt,
+    Map<String, dynamic>? cartSnapshot,
   }) async {
     // Strict paise conversion: multiply rupees by 100
     final int amountInPaise = amountRupees * 100;
@@ -40,6 +48,7 @@ class RazorpayService {
           'amount': amountInPaise,
           'currency': currency,
           'receipt': receipt ?? 'rcpt_${DateTime.now().millisecondsSinceEpoch}',
+          if (cartSnapshot != null) 'cartSnapshot': cartSnapshot,
         },
       );
 
@@ -89,8 +98,41 @@ class RazorpayService {
     }
   }
 
+  /// Look up the current status of an order's payment row directly (RLS
+  /// scoped to the signed-in user, so this is safe to call from the app).
+  ///
+  /// Used after Razorpay's checkout reports a failure/cancellation — before
+  /// showing the user a scary "payment failed, try again" message, we check
+  /// whether the Razorpay webhook has *already* reconciled this exact order
+  /// as SUCCESS in the background (which happens when the money was in fact
+  /// captured but the client-side callback never arrived). If so, the
+  /// booking already exists and the user should see success, not failure.
+  ///
+  /// Returns a map with 'status' ('PENDING' | 'SUCCESS' | 'FAILED') and
+  /// optional 'bookingId', or null if the row can't be found/read.
+  Future<Map<String, dynamic>?> checkOrderStatus(String orderId) async {
+    if (orderId.isEmpty) return null;
+    try {
+      final data = await SupabaseService.instance.client
+          .from('payments')
+          .select('status, booking_id, razorpay_payment_id')
+          .eq('razorpay_order_id', orderId)
+          .maybeSingle();
+      if (data == null) return null;
+      return {
+        'status': data['status'] as String? ?? 'PENDING',
+        'bookingId': data['booking_id'] as String?,
+        'paymentId': data['razorpay_payment_id'] as String?,
+      };
+    } catch (e) {
+      debugPrint('[Razorpay] checkOrderStatus error: $e');
+      return null;
+    }
+  }
+
   /// Step 2: Record successful payment in Supabase.
-  /// Inserts into payments table and updates booking status to CONFIRMED.
+  /// Updates the PENDING row created by create-razorpay-order to SUCCESS
+  /// and updates booking status to CONFIRMED.
   ///
   /// [amountInPaise] — amount already in paise as stored/returned from createOrder flow.
   Future<bool> recordPaymentSuccess({
@@ -105,16 +147,19 @@ class RazorpayService {
 
       final client = SupabaseService.instance.client;
 
-      await client.from('payments').insert({
-        'user_id': user.id,
-        'booking_id': bookingId,
-        'razorpay_order_id': razorpayOrderId,
-        'razorpay_payment_id': razorpayPaymentId,
-        'amount': amountInPaise,
-        'currency': 'INR',
-        'status': 'SUCCESS',
-        'updated_at': DateTime.now().toIso8601String(),
-      });
+      // UPDATE the PENDING row from order creation rather than inserting a
+      // new one — `payments.razorpay_order_id` is now unique, and this is
+      // also what keeps this row and the webhook's reconciliation from ever
+      // racing into two rows for the same order.
+      await client
+          .from('payments')
+          .update({
+            'razorpay_payment_id': razorpayPaymentId,
+            'booking_id': bookingId,
+            'status': 'SUCCESS',
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('razorpay_order_id', razorpayOrderId);
 
       if (bookingId != null && bookingId.isNotEmpty) {
         await client
@@ -140,16 +185,18 @@ class RazorpayService {
       final user = SupabaseService.instance.currentUser;
       if (user == null) return;
 
-      await SupabaseService.instance.client.from('payments').insert({
-        'user_id': user.id,
-        'booking_id': bookingId,
-        'razorpay_order_id': razorpayOrderId,
-        'razorpay_payment_id': null,
-        'amount': amountInPaise,
-        'currency': 'INR',
-        'status': 'FAILED',
-        'updated_at': DateTime.now().toIso8601String(),
-      });
+      // UPDATE the PENDING row rather than inserting a new one (see note in
+      // recordPaymentSuccess). If the webhook already reconciled this order
+      // as SUCCESS in the background, this deliberately does NOT overwrite
+      // that — only PENDING rows are moved to FAILED.
+      await SupabaseService.instance.client
+          .from('payments')
+          .update({
+            'status': 'FAILED',
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('razorpay_order_id', razorpayOrderId)
+          .eq('status', 'PENDING');
     } catch (e) {
       debugPrint('[Razorpay] recordPaymentFailure error: $e');
     }
