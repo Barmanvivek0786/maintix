@@ -52,6 +52,21 @@ Future<void> launchRazorpayCheckout({
               contact: "$contact"
             },
             theme: { color: "#072654" },
+            // Razorpay's checkout otherwise shows its own internal
+            // "Payment could not be completed / Retry payment" screen on a
+            // failed or timed-out attempt (common on slow/UPI connections)
+            // BEFORE our own payment.failed handler below ever runs, which
+            // strands users on a scary-looking screen even when the payment
+            // actually went through and the webhook has already reconciled
+            // it server-side. Disabling it routes failures straight to
+            // payment.failed / _rzpOnFailure, so the app's own
+            // webhook-status polling (_handlePaymentFailure) gets a chance
+            // to detect an already-succeeded payment and show real success
+            // instead.
+            retry: { enabled: false },
+            // Give slow UPI confirmations more time before being treated as
+            // a failure at all.
+            timeout: 300,
             handler: function(response) {
               if (window._rzpOnSuccess) {
                 window._rzpOnSuccess(
