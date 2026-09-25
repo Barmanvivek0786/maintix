@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../../../theme/app_theme.dart';
 import '../../../providers/app_state.dart';
 import '../../../routes/app_routes.dart';
+import '../../../widgets/premium_ui.dart';
 
 class ProfileHeaderWidget extends StatelessWidget {
   const ProfileHeaderWidget({super.key});
@@ -86,13 +87,20 @@ class ProfileHeaderWidget extends StatelessWidget {
       children: [
         Container(
           padding: const EdgeInsets.all(2.5),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               colors: [AppTheme.tealAccent, Color(0xFF9BE7F7)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: AppGradients.teal.withOpacity(0.5),
+                blurRadius: 18,
+                spreadRadius: 1,
+              ),
+            ],
           ),
           child: Container(
             padding: const EdgeInsets.all(2.5),
@@ -106,7 +114,7 @@ class ProfileHeaderWidget extends StatelessWidget {
         Positioned(
           bottom: -2,
           right: -2,
-          child: GestureDetector(
+          child: TapScale(
             onTap: () => context.push(AppRoutes.editProfileScreen),
             child: Container(
               width: 24,
@@ -142,6 +150,7 @@ class ProfileHeaderWidget extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 12.5,
+                letterSpacing: 0.1,
                 color: Colors.white.withAlpha(200),
               ),
             ),
@@ -159,19 +168,29 @@ class ProfileHeaderWidget extends StatelessWidget {
     return Container(
       width: double.infinity,
       clipBehavior: Clip.antiAlias,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppTheme.primaryNavy, AppTheme.headerAlt],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
+          colors: [
+            AppTheme.primaryNavy,
+            AppTheme.headerAlt,
+            AppGradients.teal.withOpacity(0.14),
+          ],
+          stops: const [0.0, 0.6, 1.0],
         ),
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: AppGradients.teal.withOpacity(0.22), width: 1),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryNavy.withAlpha(70),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
+            color: AppTheme.primaryNavy.withAlpha(90),
+            blurRadius: 28,
+            offset: const Offset(0, 12),
+          ),
+          BoxShadow(
+            color: AppGradients.teal.withOpacity(0.08),
+            blurRadius: 40,
           ),
         ],
       ),
@@ -194,6 +213,7 @@ class ProfileHeaderWidget extends StatelessWidget {
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 19,
                         fontWeight: FontWeight.w800,
+                        letterSpacing: 0.1,
                         color: Colors.white,
                       ),
                     ),
@@ -252,24 +272,32 @@ class ProfileHeaderWidget extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
-                GestureDetector(
+                TapScale(
                   onTap: openEdit,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
+                      horizontal: 16,
+                      vertical: 9,
                     ),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
-                      gradient: const LinearGradient(
-                        colors: [AppTheme.tealAccent, Color(0xFF0088A8)],
+                      gradient: LinearGradient(
+                        colors: [AppTheme.tealAccent, AppGradients.cyan],
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppGradients.teal.withOpacity(0.4),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: Text(
                       'Edit Profile',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
                         color: Colors.white,
                       ),
                     ),
