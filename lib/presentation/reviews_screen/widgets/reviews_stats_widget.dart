@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../theme/app_theme.dart';
+import '../../../widgets/premium_ui.dart';
 
 class ReviewsStatsWidget extends StatelessWidget {
   const ReviewsStatsWidget({super.key});
@@ -8,14 +9,27 @@ class ReviewsStatsWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppTheme.primaryNavy, Color(0xFF0A5A8A)],
+          colors: [
+            AppTheme.primaryNavy,
+            const Color(0xFF0A5A8A),
+            AppGradients.teal.withOpacity(0.14),
+          ],
+          stops: const [0.0, 0.65, 1.0],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppGradients.teal.withOpacity(0.18), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryNavy.withOpacity(0.35),
+            blurRadius: 22,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -59,29 +73,44 @@ class _StatItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final color = iconColor ?? AppTheme.tealAccent;
     return Expanded(
-      child: Column(
-        children: [
-          Icon(icon, color: iconColor ?? AppTheme.tealAccent, size: 24),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
+      child: TapScale(
+        onTap: () {},
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color.withOpacity(0.14),
+                boxShadow: [
+                  BoxShadow(color: color.withOpacity(0.3), blurRadius: 10),
+                ],
+              ),
+              child: Icon(icon, color: color, size: 22),
             ),
-          ),
-          Text(
-            label,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 11,
-              color: Colors.white.withAlpha(166),
-              height: 1.3,
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.1,
+                color: Colors.white,
+              ),
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+            Text(
+              label,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 11,
+                color: Colors.white.withAlpha(166),
+                height: 1.3,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
