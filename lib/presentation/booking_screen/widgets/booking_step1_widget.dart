@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../theme/app_theme.dart';
 import '../../../providers/app_state.dart';
-import '../../../widgets/premium_ui.dart';
 
 class BookingStep1Widget extends StatefulWidget {
   final VoidCallback onNext;
@@ -73,7 +72,6 @@ class _BookingStep1WidgetState extends State<BookingStep1Widget> {
             style: GoogleFonts.plusJakartaSans(
               fontSize: 20,
               fontWeight: FontWeight.w800,
-              letterSpacing: 0.1,
               color: AppTheme.textPrimary,
             ),
           ),
@@ -93,68 +91,46 @@ class _BookingStep1WidgetState extends State<BookingStep1Widget> {
             final isSelected = qty > 0;
 
             return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.only(bottom: 10),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOutCubic,
-                padding: const EdgeInsets.all(15),
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  gradient: isSelected
-                      ? LinearGradient(
-                          colors: [
-                            AppTheme.surfaceWhite,
-                            AppGradients.teal.withOpacity(0.06),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        )
-                      : null,
-                  color: isSelected ? null : AppTheme.surfaceWhite,
-                  borderRadius: BorderRadius.circular(20),
+                  color: AppTheme.surfaceWhite,
+                  borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: isSelected
-                        ? AppGradients.teal.withOpacity(0.7)
-                        : AppTheme.divider,
+                    color: isSelected ? AppTheme.tealAccent : AppTheme.divider,
                     width: isSelected ? 2 : 1,
                   ),
                   boxShadow: [
                     BoxShadow(
                       color: isSelected
-                          ? AppGradients.teal.withOpacity(0.25)
+                          ? AppTheme.tealAccent.withAlpha(26)
                           : AppTheme.cardShadow,
-                      blurRadius: isSelected ? 18 : 10,
-                      offset: const Offset(0, 4),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
                 child: Row(
                   children: [
                     Container(
-                      width: 50,
-                      height: 50,
+                      width: 48,
+                      height: 48,
                       decoration: BoxDecoration(
-                        gradient: isSelected
-                            ? LinearGradient(
-                                colors: [AppTheme.tealAccent, AppGradients.cyan],
-                              )
-                            : null,
-                        color: isSelected ? null : AppTheme.background,
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: AppGradients.teal.withOpacity(0.4),
-                                  blurRadius: 10,
-                                ),
-                              ]
-                            : null,
+                        color: isSelected
+                            ? AppTheme.tealLight
+                            : AppTheme.background,
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
                             Icons.water_drop_rounded,
-                            color: isSelected ? Colors.white : AppTheme.textMuted,
+                            color: isSelected
+                                ? AppTheme.tealAccent
+                                : AppTheme.textMuted,
                             size: 18,
                           ),
                           Text(
@@ -162,13 +138,15 @@ class _BookingStep1WidgetState extends State<BookingStep1Widget> {
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 9,
                               fontWeight: FontWeight.w700,
-                              color: isSelected ? Colors.white : AppTheme.textMuted,
+                              color: isSelected
+                                  ? AppTheme.tealAccent
+                                  : AppTheme.textMuted,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(width: 14),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,11 +156,9 @@ class _BookingStep1WidgetState extends State<BookingStep1Widget> {
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
-                              letterSpacing: 0.1,
                               color: AppTheme.textPrimary,
                             ),
                           ),
-                          const SizedBox(height: 2),
                           Text(
                             _formatPrice(price),
                             style: GoogleFonts.plusJakartaSans(
@@ -203,21 +179,18 @@ class _BookingStep1WidgetState extends State<BookingStep1Widget> {
                               ? () => _updateQuantity(size, -1)
                               : null,
                         ),
-                        SizedBox(
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
                           width: 36,
                           child: Center(
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 150),
-                              child: Text(
-                                '$qty',
-                                key: ValueKey(qty),
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                  color: qty > 0
-                                      ? AppTheme.tealAccent
-                                      : AppTheme.textMuted,
-                                ),
+                            child: Text(
+                              '$qty',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: qty > 0
+                                    ? AppTheme.tealAccent
+                                    : AppTheme.textMuted,
                               ),
                             ),
                           ),
@@ -238,10 +211,10 @@ class _BookingStep1WidgetState extends State<BookingStep1Widget> {
           if (_bulkDiscount) ...[
             const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: AppTheme.success.withAlpha(20),
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppTheme.success.withAlpha(77)),
               ),
               child: Row(
@@ -287,26 +260,10 @@ class _BookingStep1WidgetState extends State<BookingStep1Widget> {
 
           // Subtotal
           Container(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppTheme.primaryNavy,
-                  AppGradients.midnight2,
-                  AppGradients.teal.withOpacity(0.1),
-                ],
-                stops: const [0.0, 0.65, 1.0],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.primaryNavy.withOpacity(0.3),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
-                ),
-              ],
+              color: AppTheme.primaryNavy,
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Column(
               children: [
@@ -362,7 +319,6 @@ class _BookingStep1WidgetState extends State<BookingStep1Widget> {
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        letterSpacing: 0.1,
                         color: Colors.white,
                       ),
                     ),
@@ -382,27 +338,17 @@ class _BookingStep1WidgetState extends State<BookingStep1Widget> {
 
           const SizedBox(height: 20),
 
-          TapScale(
-            onTap: _totalTanks > 0 ? widget.onNext : () {},
-            child: Container(
-              width: double.infinity,
-              height: 54,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                gradient: _totalTanks > 0
-                    ? LinearGradient(colors: [AppTheme.tealAccent, AppGradients.cyan])
-                    : null,
-                color: _totalTanks > 0 ? null : AppTheme.divider,
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: _totalTanks > 0
-                    ? [
-                        BoxShadow(
-                          color: AppGradients.teal.withOpacity(0.4),
-                          blurRadius: 18,
-                          offset: const Offset(0, 6),
-                        ),
-                      ]
-                    : null,
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton(
+              onPressed: _totalTanks > 0 ? widget.onNext : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.tealAccent,
+                disabledBackgroundColor: AppTheme.divider,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -412,8 +358,9 @@ class _BookingStep1WidgetState extends State<BookingStep1Widget> {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      letterSpacing: 0.1,
-                      color: _totalTanks > 0 ? Colors.white : AppTheme.textMuted,
+                      color: _totalTanks > 0
+                          ? Colors.white
+                          : AppTheme.textMuted,
                     ),
                   ),
                   const SizedBox(width: 6),
@@ -445,28 +392,17 @@ class _CounterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TapScale(
-      onTap: onTap ?? () {},
+    return GestureDetector(
+      onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          gradient: onTap != null && isAdd
-              ? LinearGradient(colors: [AppTheme.tealAccent, AppGradients.cyan])
-              : null,
           color: onTap != null
-              ? (isAdd ? null : AppTheme.primaryNavy)
+              ? (isAdd ? AppTheme.tealAccent : AppTheme.primaryNavy)
               : AppTheme.divider,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: onTap != null && isAdd
-              ? [
-                  BoxShadow(
-                    color: AppGradients.teal.withOpacity(0.4),
-                    blurRadius: 8,
-                  ),
-                ]
-              : null,
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(icon, color: Colors.white, size: 16),
       ),
