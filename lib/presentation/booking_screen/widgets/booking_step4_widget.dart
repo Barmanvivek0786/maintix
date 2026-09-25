@@ -120,10 +120,30 @@ class _BookingStep4WidgetState extends State<BookingStep4Widget> {
 
     try {
       final int amountInPaise = totalAmount * 100;
+      final cart = appState.cartState;
+      final orderItems = cart.tankQuantities.entries
+          .where((e) => e.value > 0)
+          .toList();
+      final serviceLabel = orderItems
+          .map((e) => '${e.key} × ${e.value}')
+          .join(', ');
+
+      // Snapshot of what's being booked. The server stores this alongside
+      // the order so the Razorpay webhook can still create the correct
+      // booking if the app never receives a success/failure callback for
+      // this payment (this is what actually fixes the "order already paid"
+      // retry error — see razorpay-webhook for the full explanation).
+      final cartSnapshot = {
+        'serviceName': '$serviceLabel Tank Cleaning',
+        'date': cart.selectedDate ?? '',
+        'timeSlot': cart.selectedTimeSlot ?? '',
+        'address': cart.address,
+      };
 
       final order = await RazorpayService.instance.createOrder(
         amountRupees: totalAmount,
         receipt: 'rcpt_${DateTime.now().millisecondsSinceEpoch}',
+        cartSnapshot: cartSnapshot,
       );
 
       if (order == null) {
@@ -192,16 +212,7 @@ class _BookingStep4WidgetState extends State<BookingStep4Widget> {
                 );
               },
           onFailure: (String errorMsg) {
-            Fluttertoast.showToast(
-              msg: 'Payment failed. Please try again.',
-              backgroundColor: AppTheme.error,
-              textColor: Colors.white,
-              toastLength: Toast.LENGTH_LONG,
-            );
-            RazorpayService.instance.recordPaymentFailure(
-              razorpayOrderId: orderId,
-              amountInPaise: amountInPaise,
-            );
+            _handlePaymentFailure(orderId, amountInPaise, errorMsg);
           },
         );
       }
@@ -214,6 +225,58 @@ class _BookingStep4WidgetState extends State<BookingStep4Widget> {
         toastLength: Toast.LENGTH_LONG,
       );
     }
+  }
+
+  /// Razorpay reported a failure (declined, cancelled, timed out, or the
+  /// exact "order already paid" retry error). Before scaring the user with
+  /// a "payment failed, try again" toast, check whether the Razorpay
+  /// webhook has already reconciled this order as SUCCESS in the
+  /// background — this happens when the money was genuinely captured but
+  /// the client-side callback never made it back to the app. If so, the
+  /// booking already exists server-side; show success instead of a false
+  /// failure (and, critically, don't let the user pay a second time).
+  Future<void> _handlePaymentFailure(
+    String orderId,
+    int amountInPaise,
+    String errorMsg,
+  ) async {
+    // The webhook is usually near-instant but can lag a couple of seconds
+    // behind Razorpay's own client-side callback, so poll briefly instead
+    // of checking once.
+    for (var attempt = 0; attempt < 4; attempt++) {
+      await Future.delayed(Duration(milliseconds: attempt == 0 ? 500 : 1500));
+      final status = await RazorpayService.instance.checkOrderStatus(orderId);
+      if (status != null && status['status'] == 'SUCCESS') {
+        if (!mounted) return;
+        Fluttertoast.showToast(
+          msg: 'Your payment actually went through — booking confirmed!',
+          backgroundColor: AppTheme.success,
+          textColor: Colors.white,
+          toastLength: Toast.LENGTH_LONG,
+        );
+        final appState = context.read<AppState>();
+        appState.resetCart();
+        await appState.loadDbBookings();
+        _showPaymentSuccessModal(
+          context,
+          status['paymentId'] as String? ?? '',
+          orderId,
+        );
+        return;
+      }
+    }
+
+    if (!mounted) return;
+    Fluttertoast.showToast(
+      msg: 'Payment failed. Please try again.',
+      backgroundColor: AppTheme.error,
+      textColor: Colors.white,
+      toastLength: Toast.LENGTH_LONG,
+    );
+    await RazorpayService.instance.recordPaymentFailure(
+      razorpayOrderId: orderId,
+      amountInPaise: amountInPaise,
+    );
   }
 
   Future<void> _handlePaymentSuccess(
