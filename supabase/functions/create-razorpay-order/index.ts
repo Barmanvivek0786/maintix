@@ -1,3 +1,5 @@
+import { createClient } from "npm:@supabase/supabase-js@2";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -25,11 +27,37 @@ Deno.serve(async (request) => {
     return json({ error: "Razorpay is not configured on the server" }, 500);
   }
 
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+
+  // Identify the caller from their own JWT (never trust a client-supplied
+  // user id). A payment must always be tied to a real logged-in user so it
+  // can be reconciled later.
+  const authHeader = request.headers.get("Authorization") ?? "";
+  const userClient = createClient(supabaseUrl, anonKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const {
+    data: { user },
+  } = await userClient.auth.getUser();
+  if (!user) {
+    return json({ error: "You must be signed in to pay" }, 401);
+  }
+
   try {
     const input = await request.json();
     const amount = Number(input.amount);
     const currency = String(input.currency ?? "INR");
     const receipt = String(input.receipt ?? "");
+    // Optional snapshot of the cart (tanks, date, slot, address, total) so
+    // a webhook that lands after the client has given up can still create
+    // the booking correctly. Never trusted for pricing — only for display /
+    // booking-recreation fields.
+    const cartSnapshot =
+      input.cartSnapshot && typeof input.cartSnapshot === "object"
+        ? input.cartSnapshot
+        : null;
 
     if (!Number.isInteger(amount) || amount <= 0 || amount > 100000000) {
       return json({ error: "Invalid payment amount" }, 400);
@@ -55,6 +83,36 @@ Deno.serve(async (request) => {
     if (!razorpayResponse.ok) {
       console.error("Razorpay order creation failed", razorpayResponse.status, JSON.stringify(payload));
       return json({ error: "Could not create payment order" }, 502);
+    }
+
+    // Persist the order as PENDING *before* returning it to the client.
+    // This is the row a Razorpay webhook (supabase/functions/razorpay-webhook)
+    // will reconcile against if the client never gets a success/failure
+    // callback — the actual fix for "order already paid" retries.
+    if (serviceRoleKey) {
+      const adminClient = createClient(supabaseUrl, serviceRoleKey);
+      const { error: insertError } = await adminClient.from("payments").upsert(
+        {
+          user_id: user.id,
+          razorpay_order_id: payload.id,
+          amount,
+          currency,
+          status: "PENDING",
+          cart_snapshot: cartSnapshot,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "razorpay_order_id" },
+      );
+      if (insertError) {
+        // Don't block checkout on this — but log loudly, since it means the
+        // webhook safety net won't have anything to reconcile against for
+        // this particular order.
+        console.error("Failed to persist PENDING payment row", insertError);
+      }
+    } else {
+      console.error(
+        "SUPABASE_SERVICE_ROLE_KEY missing — payments safety net is disabled",
+      );
     }
 
     // Return the server's own key_id alongside the order so the client
