@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../theme/app_theme.dart';
+import '../../../widgets/premium_ui.dart';
 
 class BookingProgressWidget extends StatelessWidget {
   final int currentStep;
@@ -32,14 +33,20 @@ class BookingProgressWidget extends StatelessWidget {
                     children: [
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
-                        width: isActive ? 32 : 24,
-                        height: isActive ? 32 : 24,
+                        curve: Curves.easeOutCubic,
+                        width: isActive ? 34 : 24,
+                        height: isActive ? 34 : 24,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isDone
+                          gradient: isActive
+                              ? LinearGradient(
+                                  colors: [AppTheme.tealAccent, AppGradients.cyan],
+                                )
+                              : null,
+                          color: isActive
+                              ? null
+                              : isDone
                               ? AppTheme.success
-                              : isActive
-                              ? AppTheme.tealAccent
                               : Colors.white.withAlpha(38),
                           border: Border.all(
                             color: isDone
@@ -49,6 +56,15 @@ class BookingProgressWidget extends StatelessWidget {
                                 : Colors.white.withAlpha(51),
                             width: 2,
                           ),
+                          boxShadow: isActive
+                              ? [
+                                  BoxShadow(
+                                    color: AppGradients.teal.withOpacity(0.55),
+                                    blurRadius: 14,
+                                    spreadRadius: 1,
+                                  ),
+                                ]
+                              : null,
                         ),
                         child: Center(
                           child: isDone
@@ -69,7 +85,7 @@ class BookingProgressWidget extends StatelessWidget {
                                 ),
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 5),
                       Text(
                         _labels[index],
                         style: GoogleFonts.plusJakartaSans(
@@ -77,6 +93,7 @@ class BookingProgressWidget extends StatelessWidget {
                           fontWeight: isActive
                               ? FontWeight.w700
                               : FontWeight.w400,
+                          letterSpacing: 0.2,
                           color: isActive
                               ? AppTheme.tealAccent
                               : isDone
