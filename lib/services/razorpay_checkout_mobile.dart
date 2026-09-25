@@ -47,6 +47,20 @@ Future<void> launchRazorpayCheckout({
     'description': 'Water Tank Cleaning Service',
     'prefill': {'email': email, 'contact': contact},
     'theme': {'color': '#072654'},
+    // Razorpay's checkout otherwise shows its own internal "Payment could
+    // not be completed / Retry payment" screen on a failed or timed-out
+    // attempt (common on slow/UPI connections) BEFORE our own
+    // EVENT_PAYMENT_ERROR handler ever runs — which is what strands users
+    // on a scary-looking screen even when the payment actually went
+    // through and our webhook has already reconciled it. Disabling it
+    // routes failures straight to EVENT_PAYMENT_ERROR above, so the app's
+    // own webhook-status polling (see _handlePaymentFailure) gets a
+    // chance to detect a already-succeeded payment and show real success
+    // instead.
+    'retry': {'enabled': false},
+    // Give slow UPI confirmations more time before being treated as a
+    // failure at all.
+    'timeout': 300,
   };
 
   try {
