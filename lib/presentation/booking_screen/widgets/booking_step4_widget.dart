@@ -399,6 +399,16 @@ class _BookingStep4WidgetState extends State<BookingStep4Widget> {
     String paymentId,
     String orderId,
   ) {
+    // Resolve the router NOW, before returning control to the caller. Both
+    // call sites immediately follow this with appState.resetCart(), which
+    // (via BookingScreen's cart-watcher) can rebuild/replace this step
+    // widget and deactivate its BuildContext before the user ever taps a
+    // button in the dialog. Calling context.go(...) later on an already
+    // deactivated context silently does nothing — which is exactly why
+    // "View Booking" / "Back to Home" could appear unresponsive. Holding
+    // onto the already-resolved GoRouter instance instead of the context
+    // sidesteps that entirely, since the router itself stays valid.
+    final router = GoRouter.of(context);
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -407,11 +417,11 @@ class _BookingStep4WidgetState extends State<BookingStep4Widget> {
         orderId: orderId,
         onViewBooking: () {
           Navigator.pop(ctx);
-          context.go(AppRoutes.bookingHistoryScreen);
+          router.go(AppRoutes.bookingHistoryScreen);
         },
         onBackToHome: () {
           Navigator.pop(ctx);
-          context.go(AppRoutes.homeScreen);
+          router.go(AppRoutes.homeScreen);
         },
       ),
     );
