@@ -104,14 +104,20 @@ class AppTheme {
     final changed = dark != isDark;
     isDark = dark;
     SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
+      const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: dark ? Brightness.light : Brightness.dark,
-        statusBarBrightness: dark ? Brightness.dark : Brightness.light,
+        // Every screen's top header/app bar is a dark navy bar in BOTH
+        // themes (lightNavy and darkNavy are both dark colours) — the
+        // status bar sits directly on top of it. Icons therefore must
+        // always be light (white) to stay visible, regardless of whether
+        // the app is in light or dark theme. Previously this was tied to
+        // `dark` (light theme -> dark icons), which put dark-on-dark icons
+        // over the header any time the app was in light mode, making the
+        // clock/battery/signal icons effectively invisible there.
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
         systemNavigationBarColor: Colors.transparent,
-        systemNavigationBarIconBrightness: dark
-            ? Brightness.light
-            : Brightness.dark,
+        systemNavigationBarIconBrightness: Brightness.light,
         systemNavigationBarDividerColor: Colors.transparent,
       ),
     );
